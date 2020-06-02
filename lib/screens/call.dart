@@ -3,8 +3,9 @@ import 'dart:convert';
 import 'dart:ui';
 
 import 'package:agora_rtc_engine/agora_rtc_engine.dart';
-// import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:diagonal_scrollview/diagonal_scrollview.dart';
 import 'package:teacher_app/components/digicampus_appbar.dart';
 import 'package:teacher_app/components/live_stream_settings.dart';
 import 'package:teacher_app/models/grade.dart';
@@ -29,7 +30,7 @@ class _CallPageState extends State<CallPage> {
   final broadcasterUid = 3001;
   final bool isflag = false;
   bool checkParticipants = false;
-  // Firestore firestore = Firestore.instance;
+  Firestore firestore = Firestore.instance;
   // List<DocumentSnapshot> _items;
   // DocumentSnapshot _item;
   Grade grade = Grade.empty();
@@ -88,8 +89,8 @@ class _CallPageState extends State<CallPage> {
         null,
         'live',
         null,
-        broadcasterUid);
-        // startRecording();
+        0);
+
     // await AgoraRtcEngine.enableWebSdkInteroperability(true);
   }
 
@@ -116,13 +117,13 @@ class _CallPageState extends State<CallPage> {
       int uid,
       int elapsed,
     ) {
-      
-      
-      setState(() {
-        final info = 'onJoinChannel: $channel, uid: $uid';
-        _infoStrings.add(info);
+      firestore.collection('live').document('broadcast').setData({'uid':uid}).then((value) {
+        startRecording(uid);
+        setState(() {
+          final info = 'onJoinChannel: $channel, uid: $uid';
+          _infoStrings.add(info);
+        });
       });
-
       //   DocumentReference documentReference =
       //     firestore.collection('classroom_${grade.id}').document('live_session');
       // firestore.runTransaction((transaction) async {
@@ -134,6 +135,7 @@ class _CallPageState extends State<CallPage> {
         setState(() {
           _infoStrings.removeLast();
         });
+//        startRecording();
       });
     };
 
@@ -443,7 +445,7 @@ class _CallPageState extends State<CallPage> {
   }
 
   void _onCallEnd(BuildContext context) {
-    // stopRecording();
+     stopRecording();
     Navigator.pop(context);
   }
 
@@ -517,17 +519,23 @@ class _CallPageState extends State<CallPage> {
                                     textAlign: TextAlign.center,
                                     style: TextStyle(
                                         color: Colors.white, fontSize: 16))
-                                : Column(
-                                    children:
-                                        //   List.generate(
-                                        //       _item['userid'].length, (index) {
-                                        // return Text('User ${index+1} : ${_item['userid'][index]}',
-                                        List.generate(_users.length, (index) {
-                                    return Text(
-                                        'User ${index + 1} : ${_users.elementAt(index)}',
-                                        style: TextStyle(
-                                            color: Colors.white, fontSize: 16));
-                                  }))
+                                : DiagonalScrollView(
+                                  enableFling: true,
+                                  flingVelocityReduction: 0.3,
+                                  maxHeight: MediaQuery.of(context).size.height * 0.6,
+                                  maxWidth: MediaQuery.of(context).size.width - 40,
+                                  child: Column(
+                                      children:
+                                          //   List.generate(
+                                          //       _item['userid'].length, (index) {
+                                          // return Text('User ${index+1} : ${_item['userid'][index]}',
+                                          List.generate(_users.length, (index) {
+                                      return Text(
+                                          'User ${index + 1} : ${_users.elementAt(index)}',
+                                          style: TextStyle(
+                                              color: Colors.white, fontSize: 16));
+                                    })),
+                                )
                             // Center(
                             //     child: Text(
                             //   'No Participants yet!',
@@ -552,11 +560,12 @@ class _CallPageState extends State<CallPage> {
     );
   }
 
-  Future<void> startRecording() async {
+  Future<void> startRecording(int uid) async {
+    await Future.delayed(Duration(seconds: 80));
     print("Starting Recording");
     String url = 'http://192.168.0.12:8080/start_recording';
     Map<String, String> headers = {"Content-type": "application/json"};
-    Map<String, dynamic> params = {};
+    Map<String, String> params = {"uid":uid.toString()};
     String data = jsonEncode(params);
     
     http.get(url, headers: headers).then((response) {

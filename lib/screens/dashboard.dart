@@ -10,7 +10,7 @@ import 'package:teacher_app/components/digi_menu_card.dart';
 import 'package:teacher_app/components/digi_period_card.dart';
 import 'package:teacher_app/components/digi_nav_bar.dart';
 import 'package:teacher_app/screens/chat_screen.dart';
-import 'package:teacher_app/screens/knowledge_base.dart';
+import 'package:teacher_app/screens/knowledge_base_new.dart';
 
 class HomePage extends DrawerContent {
   const HomePage({this.onPressed, this.title, Key key}) : super(key: key);
