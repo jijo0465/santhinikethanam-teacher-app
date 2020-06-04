@@ -1,10 +1,11 @@
 import 'dart:io';
 import 'dart:async';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/services.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:teacher_app/components/digicampus_appbar.dart';
 import 'package:teacher_app/models/grade.dart';
@@ -12,62 +13,8 @@ import 'package:teacher_app/models/student.dart';
 import 'package:teacher_app/models/teacher.dart';
 import 'package:teacher_app/states/teacher_state.dart';
 import 'package:video_player/video_player.dart';
-
-enum FileType {
-  ANY,
-  IMAGE,
-  VIDEO,
-  CAMERA,
-  CUSTOM,
-}
-
-class FilePicker {
-  static const MethodChannel _channel = const MethodChannel('file_picker');
-  static const String _tag = 'FilePicker';
-
-  static Future<String> _getPath(String type) async {
-    try {
-      return await _channel.invokeMethod(type);
-    } on PlatformException catch (e) {
-      print("[$_tag] Platform exception: " + e.toString());
-    } catch (e) {
-      print(
-          "[$_tag] Unsupported operation. This probably have happened because [${type.split('_').last}] is an unsupported file type. You may want to try FileType.ALL instead.");
-    }
-    return null;
-  }
-
-  static Future<String> _getImage(ImageSource type) async {
-    try {
-      var image = await ImagePicker.pickImage(source: type);
-      return image?.path;
-    } on PlatformException catch (e) {
-      print("[$_tag] Platform exception: " + e.toString());
-    }
-    return null;
-  }
-
-  static Future<Map<String, dynamic>> getFilePath(
-      {FileType type = FileType.ANY, String fileExtension}) async {
-    switch (type) {
-      case FileType.IMAGE:
-        final result = await _getImage(ImageSource.gallery);
-        return <String, String>{'path': result};
-      case FileType.VIDEO:
-        final result = await _channel.invokeMethod('VIDEO');
-        return Map<String, dynamic>.from(result);
-      case FileType.ANY:
-        final result = await _getPath('ANY');
-        return <String, String>{'path': result};
-      case FileType.CUSTOM:
-        final result = await _getPath('__CUSTOM_' + (fileExtension ?? ''));
-        return <String, String>{'path': result};
-      default:
-        final result = await _getPath('ANY');
-        return <String, String>{'path': result};
-    }
-  }
-}
+import 'package:multi_image_picker/multi_image_picker.dart';
+import 'package:file_picker/file_picker.dart';
 
 class DiscussionsScreen extends StatefulWidget {
   // final Grade grade = Grade();
@@ -97,12 +44,45 @@ class _DiscussionsScreenState extends State<DiscussionsScreen> {
   VideoPlayerController _playerController;
   Color color = Colors.grey;
   File imageURI;
+  List<Asset> images = List<Asset>();
+  String error = 'No Error Dectected';
+  ValueNotifier<Duration> playtime = ValueNotifier(Duration(seconds: 0));
 
-  Future getImage() async {
-    var image = await ImagePicker.pickImage(source: ImageSource.camera);
+  // Future getImage() async {
+  //   var image = await ImagePicker.pickImage(source: ImageSource.camera);
+
+  //   setState(() {
+  //     imageURI = image;
+  //   });
+  // }
+
+  Future<void> loadAssets() async {
+    List<Asset> resultList = List<Asset>();
+    String error = 'No Error Dectected';
+
+    try {
+      resultList = await MultiImagePicker.pickImages(
+        maxImages: 10,
+        enableCamera: true,
+        selectedAssets: images,
+        cupertinoOptions: CupertinoOptions(takePhotoIcon: "chat"),
+        materialOptions: MaterialOptions(
+          actionBarColor: "#00739e",
+          statusBarColor: "#00739e",
+          actionBarTitle: "Gallery",
+          allViewTitle: "All Photos",
+          useDetailsView: false,
+          selectCircleStrokeColor: "#000000",
+        ),
+      );
+    } on Exception catch (e) {
+      error = e.toString();
+    }
+
+    if (!mounted) return;
 
     setState(() {
-      imageURI = image;
+      images = resultList;
     });
   }
 
@@ -119,6 +99,10 @@ class _DiscussionsScreenState extends State<DiscussionsScreen> {
               _playerController.play();
             });
           });
+    _playerController.addListener(() async {
+      await Future.delayed(Duration(seconds: 1));
+      playtime.value = await _playerController.position;
+    });
 
     super.initState();
   }
@@ -143,54 +127,122 @@ class _DiscussionsScreenState extends State<DiscussionsScreen> {
           icon: Icons.close,
           onDrawerTapped: () => Navigator.of(context).pop(),
         ),
-        SingleChildScrollView(
-          child: Container(
-            height: 250,
-            width: double.infinity,
-            child: Stack(
-              children: <Widget>[
-                Center(
-                  child: _playerController.value.initialized
-                      ? AspectRatio(
-                          aspectRatio: _playerController.value.aspectRatio,
-                          child: VideoPlayer(_playerController),
-                        )
-                      : Container(),
-                ),
-                Center(
-                  child: FloatingActionButton(
-                    onPressed: () {
-                      setState(() {
-                        _playerController.value.isPlaying
-                            ? _playerController.pause()
-                            : _playerController.play();
-                      });
-                    },
-                    child: Icon(
-                      _playerController.value.isPlaying
-                          ? Icons.pause
-                          : Icons.play_arrow,
+        Container(
+          width: double.infinity,
+          child: Column(
+            children: [
+              AspectRatio(
+                aspectRatio: _playerController.value.aspectRatio,
+                child: Stack(
+                  children: <Widget>[
+                    Center(
+                      child: _playerController.value.initialized
+                          ? AspectRatio(
+                              aspectRatio: _playerController.value.aspectRatio,
+                              child: VideoPlayer(_playerController),
+                            )
+                          : Container(),
                     ),
-                  ),
-                )
-              ],
+                    Align(
+                      alignment: Alignment.bottomLeft,
+                      child: ValueListenableBuilder<Duration>(
+                        valueListenable: playtime,
+                        builder: (context, val, _) {
+                          print(val);
+                          return Text('${val.inMinutes} : ${val.inSeconds}');
+                        },
+                      ),
+                    ),
+                    Center(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: [
+                          IconButton(
+                              icon: Icon(Icons.fast_rewind),
+                              onPressed: () async {
+                                Duration duration = Duration(
+                                    seconds: (await _playerController.position)
+                                            .inSeconds -
+                                        10);
+                                _playerController.seekTo(duration);
+                              }),
+                          FloatingActionButton(
+                            onPressed: () {
+                              setState(() {
+                                _playerController.value.isPlaying
+                                    ? _playerController.pause()
+                                    : _playerController.play();
+                              });
+                            },
+                            child: Icon(
+                              _playerController.value.isPlaying
+                                  ? Icons.pause
+                                  : Icons.play_arrow,
+                            ),
+                          ),
+                          IconButton(
+                              icon: Icon(Icons.fast_forward),
+                              onPressed: () async {
+                                Duration duration = Duration(
+                                    seconds: (await _playerController.position)
+                                            .inSeconds +
+                                        10);
+                                _playerController.seekTo(duration);
+                              })
+                        ],
+                      ),
+                    ),
+                    Align(
+                        alignment: Alignment.bottomRight,
+                        child: IconButton(
+                            icon: Icon(
+                              Icons.fullscreen,
+                              size: 40,
+                              color: Colors.black,
+                            ),
+                            onPressed: null))
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    Container(
+                      child: IconButton(
+                          icon: Icon(CupertinoIcons.video_camera_solid),
+                          onPressed: () async {
+                            File file =
+                                await FilePicker.getFile(type: FileType.video);
+                          }),
+                    ),
+                    Text('Upload Class')
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        SizedBox(height: 5),
+        Padding(
+          padding: const EdgeInsets.only(left: 8),
+          child: Text(
+            'Discussions',
+            textAlign: TextAlign.left,
+            style: TextStyle(
+              color: Colors.black,
+              fontSize: 16,
             ),
           ),
         ),
-        SizedBox(height: 12),
-        Text(
-          'Discussions',
-          textAlign: TextAlign.left,
-          style: TextStyle(
-            color: Colors.black,
-            fontSize: 16,
-          ),
-        ),
+
         SizedBox(
           height: 12,
         ),
         Row(
-         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: <Widget>[
             Container(
               height: 40,
@@ -219,11 +271,10 @@ class _DiscussionsScreenState extends State<DiscussionsScreen> {
                     borderRadius: BorderRadius.circular(20),
                   ),
                   suffixIcon: IconButton(
-                    onPressed: () {
-                      getImage();
-                      // _addToDiscussions(_textFieldController.text);
-                      // _textFieldController.clear();
-                    },
+                    onPressed: loadAssets,
+                    // _addToDiscussions(_textFieldController.text);
+                    // _textFieldController.clear();
+
                     icon: Icon(Icons.camera_alt),
                     color: Colors.blue,
                   ),
@@ -238,9 +289,7 @@ class _DiscussionsScreenState extends State<DiscussionsScreen> {
                 // },
               ),
             ),
-            IconButton(icon: Icon(Icons.book), onPressed: (){
-              FilePicker();
-            }),
+            IconButton(icon: Icon(Icons.book), onPressed: () {}),
             Container(
                 height: 40,
                 width: 40,

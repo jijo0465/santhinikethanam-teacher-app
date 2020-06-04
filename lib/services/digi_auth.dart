@@ -9,18 +9,18 @@ class DigiAuth{
   Future<Teacher> signIn(String teacherId, String password) async {
     _prfs = await SharedPreferences.getInstance();
     Teacher teacher;
-    String url = 'http://10.0.2.2:8080/digicampus/auth_api/auth_parent';
+    String url = 'http://192.168.0.12/login';
     Map<String, String> headers = {"Content-type": "application/json"};
-    Map<String, dynamic> params = {"id":teacherId,"password":password};
+    Map<String, dynamic> params = {"loginId":teacherId,"password":password};
     String data = jsonEncode(params);
     await http.post(url, headers: headers, body: data).then((response) {
       print(response.body);
       if (response.body != null) {
         final body = json.decode(response.body);
-        // if(body['response']=='ok'){
+//         if(body['response']=='ok'){
           _prfs.setBool('loggedIn', true);
           teacher = Teacher(body['parent_id'],body['name']);
-        // }
+//         }
         
       }
     }).catchError((error) => print(error));

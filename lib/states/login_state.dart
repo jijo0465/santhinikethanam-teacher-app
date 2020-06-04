@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:teacher_app/services/digi_auth.dart';
 
 enum Status { Uninitialized, Authenticated, Authenticating, Unauthenticated }
 
@@ -12,11 +13,13 @@ class LoginState with ChangeNotifier {
 
   Status get status => _status;
 
-  Future<bool> signIn(String parentId, String password) async {
-    _status = Status.Authenticated;
-    notifyListeners();
-    _prfs = await SharedPreferences.getInstance();
-    _prfs.setBool('loggedIn',true);     
+  Future<bool> signIn(String teacherId, String password) async {
+      DigiAuth digiAuth = DigiAuth();
+      digiAuth.signIn(teacherId, password);
+//    _status = Status.Authenticated;
+//    notifyListeners();
+//    _prfs = await SharedPreferences.getInstance();
+//    _prfs.setBool('loggedIn',true);
     return true;
   }
 

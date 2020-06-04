@@ -87,21 +87,28 @@ class _LoginScreenState extends State<LoginScreen> {
                               fontWeight: FontWeight.w300, color: Colors.blue),
                         ))),
               ),
-              Container(
-                  height: 40,
-                  width: 300,
-                  child: RaisedButton(
-                    onPressed: () {},
-                    child: Text(
-                      'Sign In',
-                      style: TextStyle(
-                          fontWeight: FontWeight.w600, color: Colors.white),
-                    ),
-                    color: Colors.pink[200],
-                    elevation: 6,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: new BorderRadius.circular(18.0)),
-                  )),
+              Consumer<LoginState>(
+                builder: (context, value, child) {
+                  return Container(
+                      height: 40,
+                      width: 300,
+                      child: RaisedButton(
+                        onPressed: () async {
+                          await value.signIn(_id, _password);
+                        },
+                        child: Text(
+                          'Sign In',
+                          style: TextStyle(
+                              fontWeight: FontWeight.w600, color: Colors.white),
+                        ),
+                        color: Colors.pink[200],
+                        elevation: 6,
+                        shape: RoundedRectangleBorder(
+                            borderRadius: new BorderRadius.circular(18.0)),
+                      ));
+                },
+              )
+
             ],
           ),
         )
@@ -134,15 +141,7 @@ class _LoginScreenState extends State<LoginScreen> {
         //           },
         //         ),
         //       ),
-        //       Consumer<LoginState>(
-        //         builder: (context, value, child) {
-        //           return RaisedButton(
-        //               child: Text('Log in'),
-        //               onPressed: () async{
-        //                 Teacher teacher=await value.signIn(_id, _password);
-        //               });
-        //         },
-        //       )
+
         //     ],
         //   ),
         // ),
