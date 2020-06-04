@@ -4,43 +4,58 @@ import 'dart:ui';
 
 import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/material.dart';
 import 'package:diagonal_scrollview/diagonal_scrollview.dart';
+import 'package:flutter/material.dart';
 import 'package:teacher_app/components/digicampus_appbar.dart';
 import 'package:teacher_app/components/live_stream_settings.dart';
 import 'package:teacher_app/models/grade.dart';
 import 'package:http/http.dart' as http;
 
 class CallPage extends StatefulWidget {
-  /// non-modifiable channel name of the page
   // final String channelName;
-
-  /// Creates a call page with given channel name.
   const CallPage({Key key}) : super(key: key);
 
   @override
   _CallPageState createState() => _CallPageState();
 }
 
-class _CallPageState extends State<CallPage> {
-//  String TOKEN = '';
+class _CallPageState extends State<CallPage> with SingleTickerProviderStateMixin{
   static final _users = <int>[];
   final _infoStrings = <String>[];
-  bool muted = false;
-  final broadcasterUid = 3001;
-  final bool isflag = false;
-  bool checkParticipants = false;
+  final double _minScale = .6;
+  final double _maxScale = 3;
+  final TextEditingController _textFieldController =
+    new TextEditingController();
+  DiagonalScrollViewController _controller;
+  AnimationController _animationController;
+  Animation _animation;
   Firestore firestore = Firestore.instance;
-  // List<DocumentSnapshot> _items;
-  // DocumentSnapshot _item;
+  DocumentSnapshot _participantSnapshot;
+  DocumentSnapshot _discussionSnapshot;
+  List<Widget> discussionListWidget = [];
+  List<Map<String, dynamic>> _discussionData = [];
+  List<int> participantId = [];
   Grade grade = Grade.empty();
   int id = 4001;
+  int widgetIndex = 0;
+  int broadcasterUid;
   String resourceId;
   String sid;
+//  double appBarHeight = 100;
+  double _boxSizeWidth = 520.0;
+  double _boxSizeHeight = 104.0;
+  bool onShowToolbar = true;
+  bool onShowDiscussions = false;
+  bool onCheckParticipants = false;
+  bool muted = false;
+  Color discussionFieldColor = Colors.grey;
+
   @override
   void dispose() {
     // clear users
+    _animationController.dispose();
     _users.clear();
+    discussionListWidget.clear();
     // destroy sdk
     AgoraRtcEngine.leaveChannel();
     AgoraRtcEngine.destroy();
@@ -51,8 +66,22 @@ class _CallPageState extends State<CallPage> {
   void initState() {
     super.initState();
     grade.setId(id);
+    _animationController = AnimationController(
+        vsync: this,
+        duration: Duration(milliseconds: 900)
+    );
+    _animation = Tween(
+        begin: 1.0,
+        end: 0.0 ).animate(_animationController);
+//    _animationController.forward();
     // initialize agora sdk
     initialize();
+    Future.delayed(Duration(seconds: 10)).then((value){
+      setState(() {
+        onShowToolbar = false;
+      });
+      _animationController.forward();
+    });
   }
 
   Future<void> initialize() async {
@@ -68,12 +97,6 @@ class _CallPageState extends State<CallPage> {
 
     _addAgoraEventHandlers();
     await _initAgoraRtcEngine();
-    // await AgoraRtcEngine.enableWebSdkInteroperability(true);
-    // await AgoraRtcEngine.setChannelProfile(ChannelProfile.LiveBroadcasting);
-    // await AgoraRtcEngine.setClientRole(ClientRole.Broadcaster);
-    // await AgoraRtcEngine.setParameters(
-    //     '{\"che.video.lowBitRateStreamParameter\":{\"width\":320,\"height\":180,\"frameRate\":15,\"bitRate\":140}}');
-    // await AgoraRtcEngine.joinChannel(null, widget.channelName, null, 0);
   }
 
   /// Create agora sdk instance and initialize
@@ -83,23 +106,16 @@ class _CallPageState extends State<CallPage> {
     await AgoraRtcEngine.setChannelProfile(ChannelProfile.LiveBroadcasting);
     await AgoraRtcEngine.setClientRole(ClientRole.Broadcaster);
     await AgoraRtcEngine.enableWebSdkInteroperability(true);
-    
-    
     await AgoraRtcEngine.joinChannel(
         null,
         'live',
         null,
         0);
-
     // await AgoraRtcEngine.enableWebSdkInteroperability(true);
   }
 
   /// Add agora event handlers
   void _addAgoraEventHandlers() {
-
-//    AgoraRtcEngine.onRequestToken=(){
-//      AgoraRtcEngine.renewToken(TOKEN);
-//    };
     AgoraRtcEngine.onError = (dynamic code) {
       setState(() {
         final info = 'onError: $code';
@@ -117,19 +133,15 @@ class _CallPageState extends State<CallPage> {
       int uid,
       int elapsed,
     ) {
+      firestore.collection('live').document('user').setData({'users': null});
       firestore.collection('live').document('broadcast').setData({'uid':uid}).then((value) {
         startRecording(uid);
+        broadcasterUid = uid;
         setState(() {
           final info = 'onJoinChannel: $channel, uid: $uid';
           _infoStrings.add(info);
         });
       });
-      //   DocumentReference documentReference =
-      //     firestore.collection('classroom_${grade.id}').document('live_session');
-      // firestore.runTransaction((transaction) async {
-      //   await transaction.update(
-      //       documentReference, {'userid': FieldValue.arrayUnion([uid])});
-      // });
 
       Future.delayed(Duration(seconds: 3)).then((value) {
         setState(() {
@@ -266,16 +278,6 @@ class _CallPageState extends State<CallPage> {
         AgoraRtcEngine.setupLocalVideo(viewId, VideoRenderMode.Fit);
       }),
     );
-    //  AgoraRtcEngine.createNativeView((viewId) {
-    //   // _viewId = viewId;
-    //   // print(widget.uid);
-    //   // AgoraRtcEngine.setupLocalVideo(_viewId, VideoRenderMode.Fit);
-    //   // AgoraRtcEngine.startPreview();
-    //   AgoraRtcEngine.setupRemoteVideo(viewId, VideoRenderMode.Fit, broadcasterUid); //widget.uid  --> Broadcaster Uid
-    //   // AgoraRtcEngine.startPreview();
-    //   // AgoraRtcEngine.joinChannel(null, 'flutter', null, 0);
-    // });
-    // return AgoraRenderWidget(broadcasterUid, local: true, preview: true);
   }
 
   /// Toolbar layout
@@ -284,110 +286,97 @@ class _CallPageState extends State<CallPage> {
       width: MediaQuery.of(context).size.width,
       alignment: Alignment.bottomCenter,
       padding: const EdgeInsets.symmetric(vertical: 48),
+      margin: EdgeInsets.only(bottom: 10),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: <Widget>[
           Flexible(
-            flex: 2,
+            flex: 1,
             child: RaisedButton(
-                shape: CircleBorder(side: BorderSide(color: Colors.black12)),
-                color: Theme.of(context).primaryColor.withOpacity(0.4),
-                onPressed: checkParticipants ? null : () {},
+                shape: CircleBorder(side: BorderSide(color: Colors.white30)),
+                color: Colors.grey,
+                onPressed: onCheckParticipants ? null : () {
+                  setState(() {
+                    onShowDiscussions = !onShowDiscussions;
+                  });
+                  if(!onShowDiscussions)
+                    Future.delayed(Duration(seconds: 10)).then((value) {
+                      if(!onCheckParticipants)  {
+                        _animationController.forward();
+                        setState(() {
+                          onShowToolbar = false;
+                        });
+                      }
+                    });
+                },
                 child: Icon(
                   Icons.chat,
-                  color: Colors.white,
-                  size: 20.0,
+                  color: Colors.black54,
+                  size: 40.0,
                 )),
           ),
           Flexible(
-            flex: 2,
+            flex: 1,
             child: RaisedButton(
-                shape: CircleBorder(side: BorderSide(color: Colors.black12)),
-                color: Theme.of(context).primaryColor.withOpacity(0.4),
-                onPressed: checkParticipants ? null : _onToggleMute,
+                shape: CircleBorder(side: BorderSide(color: Colors.white30)),
+                color: Colors.grey,
+                onPressed: onCheckParticipants||onShowDiscussions ? null : _onToggleMute,
                 child: Icon(
                   muted ? Icons.mic_off : Icons.mic,
-                  color: muted ? Colors.red : Colors.white,
-                  size: 20,
+                  color: muted ? Colors.red : Colors.black54,
+                  size: 40,
                 )),
           ),
           Flexible(
             flex: 3,
             child: RaisedButton(
-              shape: CircleBorder(side: BorderSide(color: Colors.black12)),
-              color: Theme.of(context).primaryColor.withOpacity(0.4),
-              onPressed: checkParticipants ? null : () => _onCallEnd(context),
+              shape: CircleBorder(side: BorderSide(color: Colors.white30)),
+              color: Colors.black54,
+              onPressed: onCheckParticipants||onShowDiscussions ? null : () => _onCallEnd(context),
               child: Icon(
                 Icons.call_end,
                 color: Colors.red,
-                size: 40.0,
+                size: 80.0,
               ),
             ),
           ),
           Flexible(
-            flex: 2,
+            flex: 1,
             child: RaisedButton(
-                shape: CircleBorder(side: BorderSide(color: Colors.black12)),
-                color: Theme.of(context).primaryColor.withOpacity(0.4),
-                onPressed: checkParticipants ? null : _onSwitchCamera,
+                shape: CircleBorder(side: BorderSide(color: Colors.white30)),
+                color: Colors.grey,
+                onPressed: onCheckParticipants||onShowDiscussions ? null : _onSwitchCamera,
                 child: Icon(
                   Icons.switch_camera,
-                  color: Colors.white,
-                  size: 20.0,
+                  color: Colors.black54,
+                  size: 40.0,
                 )),
           ),
           Flexible(
-            flex: 2,
+            flex: 1,
             child: RaisedButton(
-                shape: CircleBorder(side: BorderSide(color: Colors.black12)),
-                color: Theme.of(context).primaryColor.withOpacity(0.4),
-                onPressed: () {
+                shape: CircleBorder(side: BorderSide(color: Colors.white30)),
+                color: Colors.grey,
+                onPressed: onShowDiscussions ?null :() {
                   setState(() {
-                    checkParticipants = !checkParticipants;
+                    onCheckParticipants = !onCheckParticipants;
                   });
+                  if(!onCheckParticipants)
+                    Future.delayed(Duration(seconds: 10)).then((value) {
+                      if(!onShowDiscussions)  {
+                        _animationController.forward();
+                        setState(() {
+                          onShowToolbar = false;
+                        });
+                      }
+                    });
                 },
                 child: Icon(
                   Icons.group,
-                  color: Colors.white,
-                  size: 20.0,
+                  color: Colors.black54,
+                  size: 40.0,
                 )),
           ),
-          //   RawMaterialButton(
-          //     onPressed: _onToggleMute,
-          //     child: Icon(
-          //       muted ? Icons.mic_off : Icons.mic,
-          //       color: muted ? Colors.white : Colors.blueAccent,
-          //       size: 20.0,
-          //     ),
-          //     shape: CircleBorder(),
-          //     elevation: 2.0,
-          //     fillColor: muted ? Colors.blueAccent : Colors.white,
-          //     padding: const EdgeInsets.all(12.0),
-          //   ),
-          //   RawMaterialButton(
-          //     onPressed: () => _onCallEnd(context),
-          //     child: Icon(
-          //       Icons.call_end,
-          //       color: Colors.white,
-          //       size: 35.0,
-          //     ),
-          //     shape: CircleBorder(),
-          //     elevation: 2.0,
-          //     fillColor: Colors.redAccent,
-          //     padding: const EdgeInsets.all(15.0),
-          //   ),
-          //   RawMaterialButton(
-          //     onPressed: _onSwitchCamera,
-          //     child: Icon(
-          //       Icons.switch_camera,
-          //       color: Colors.blueAccent,
-          //       size: 20.0,
-          //     ),
-          //     shape: CircleBorder(),
-          //     elevation: 2.0,
-          //     fillColor: Colors.white,
-          //     padding: const EdgeInsets.all(12.0),
-          //   )
         ],
       ),
     );
@@ -445,8 +434,8 @@ class _CallPageState extends State<CallPage> {
   }
 
   void _onCallEnd(BuildContext context) {
-     stopRecording();
-    Navigator.pop(context);
+     stopRecording(broadcasterUid);
+     Navigator.pop(context);
   }
 
   void _onToggleMute() {
@@ -460,6 +449,114 @@ class _CallPageState extends State<CallPage> {
     AgoraRtcEngine.switchCamera();
   }
 
+  List<Widget> _getChildren(DocumentSnapshot item) {
+    List<Widget> children = [];
+    Color childColor = Colors.blueGrey;
+    double childSize = 80;
+    double childMargin = 20;
+    num numChildrenX;
+    num numChildrenY;
+    int cubeId = 1;
+    int totalParticipants = item['users']!=null ?item['users'].length :0;
+    numChildrenY = (totalParticipants/5).ceil();
+    for(int i=0; i<totalParticipants; i++)
+      participantId.insert(i,item['users'][i]);
+    print('PARTICIPANTS: $totalParticipants');
+    for (num x = 0; x < numChildrenY; x++) {
+      numChildrenX = (totalParticipants - (x*5))>5 ?5 :totalParticipants - (x*5);
+      for (num y = 0; y < numChildrenX; y++) {
+        Widget cube = Container(
+          width: childSize,
+          height: childSize,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: childColor,
+          ),
+          child: Center(
+            child: Text(
+              (cubeId++).toString(),
+              style: TextStyle(color: Colors.white, fontSize: 30),
+            ),
+          ),
+        );
+        children.add(Positioned(
+          left: childMargin + (childMargin + childSize) * y,
+          top: childMargin + (childMargin + childSize) * x,
+          child: cube,
+        ));
+      }
+    }
+    return children;
+  }
+
+  _listDiscussion(var item) {
+    for (; widgetIndex < item['discussion'].length; widgetIndex++) {
+      _discussionData.insert(widgetIndex, {
+        'id': item['discussion'][widgetIndex]['id'],
+        'text': item['discussion'][widgetIndex]['text'],
+        'time': item['discussion'][widgetIndex]['time']
+      });
+      print(_discussionData[widgetIndex]['text']);
+      discussionListWidget.add(Column(children: <Widget>[
+        Container(
+          height: 50,
+          width: MediaQuery.of(context).size.width * 5 / 6,
+          child: Row(
+            children: <Widget>[
+              Container(
+                height: 40,
+                width: 40,
+                // margin: EdgeInsets.only(left: 20),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  image: DecorationImage(
+                      image:
+                      NetworkImage(
+                          'https://i.pinimg.com/236x/e4/f7/5e/e4f75e2f6b1ef0afa711278b655dfe4a.jpg'),
+                      fit: BoxFit.fill),
+                ),
+              ),
+              Expanded(
+                  child: Container(
+                    padding: EdgeInsets.only(left: 20, right: 20),
+                    height: 50,
+                    width: MediaQuery.of(context).size.width,
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(item['discussion'][widgetIndex]['text']),
+                    ),
+                  )),
+            ],
+          ),
+        ),
+        Divider(
+          indent: 5,
+          endIndent: 5,
+          color: Colors.black38,
+          // thickness: 2,
+        )
+      ]));
+  }}
+
+  _addToDiscussions(String text) async {
+    var addText = [
+      {'id': 3001,'text': text, 'time': DateTime.now().toUtc()}
+    ];
+    DocumentReference documentReference =
+    firestore.collection('live').document('subject_date_hr');
+    firestore.runTransaction((transaction) async {
+      await transaction.update(
+          documentReference, {'discussion': FieldValue.arrayUnion(addText)});
+    });
+    // documentReference.get().then((doc){
+    //   if(doc.exists){
+    //     documentReference.updateData({'disussion':FieldValue.arrayUnion(comment)});
+    //   }else{
+    //     documentReference.setData({'disussion':FieldValue.arrayUnion(comment)});
+    //   }
+    // });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -470,83 +567,235 @@ class _CallPageState extends State<CallPage> {
             // _viewRows(),
             _viewVideo(),
             _panel(),
-            _toolbar(),
-            DigiCampusAppbar(
-              icon: Icons.close,
-              onDrawerTapped: () {
-                Navigator.of(context).pop();
-              },
+            FadeTransition(
+              opacity: _animation,
+                child: _toolbar()),
+            AnimatedPositioned(
+              duration: Duration(milliseconds: 900),
+              top: onShowToolbar ?10 :-110,
+              curve: Curves.easeIn,
+              child: DigiCampusAppbar(
+                icon: Icons.close,
+                onDrawerTapped: () {
+                  Navigator.of(context).pop();
+                },
+              ),
             ),
-            // StreamBuilder<QuerySnapshot>(
-            // stream:
-            //     firestore.collection('classroom_${grade.id}').snapshots(),
-            // builder: (BuildContext context,
-            //     AsyncSnapshot<QuerySnapshot> snapshot) {
-            //   // if (!snapshot.hasData)
-            //   if (!snapshot.hasData)
-            //     return
-            //   Center(
-            //     child: CircularProgressIndicator(
-            //       valueColor: AlwaysStoppedAnimation<Color>(
-            //           Theme.of(context).primaryColor),
-            //     ),
-            //   );
-            // else {
-            //   _items = snapshot.data.documents;
-            //   for (int i = 0; i < _items.length; i++)
-            //     if (_items[i].documentID == 'live_session')
-            //       _item = _items[i];
-            //   return
+            onShowToolbar||onShowDiscussions ?Container()
+            :Container(
+              child: GestureDetector(
+                onTap: () {
+                  _animationController.reverse();
+                  setState(() {
+                  onShowToolbar = true;
+                  });
+                  Future.delayed(Duration(seconds: 10)).then((value) {
+                    if(!onCheckParticipants&&!onShowDiscussions)  {
+                      _animationController.forward();
+                      setState(() {
+                        onShowToolbar = false;
+                      });
+                    }
+              });
+          },
+          behavior: HitTestBehavior.translucent,
+          child: Align(
+              alignment: Alignment.center,
+              child: Container(
+                height: MediaQuery.of(context).size.height,
+                width: MediaQuery.of(context).size.width,
+              ),
+          )
+        ),
+            ),
             Padding(
               padding: const EdgeInsets.all(20.0),
               child: Center(
                 child: ClipRect(
                   child: BackdropFilter(
                     filter: ImageFilter.blur(
-                        sigmaX: checkParticipants ? 25 : 0,
-                        sigmaY: checkParticipants ? 25 : 0),
-                    child: checkParticipants
+                        sigmaX: onCheckParticipants ? 25 : 0,
+                        sigmaY: onCheckParticipants ? 25 : 0),
+                    child: onCheckParticipants
+                        ? StreamBuilder<QuerySnapshot>(
+                          stream: firestore.collection('live').snapshots(),
+                          builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
+                            if(!snapshot.hasData)
+                            {
+                              return Center(
+                                child: CircularProgressIndicator(
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                      Theme.of(context).primaryColor),
+                                ),
+                              );
+                            }
+                            else  {
+                              for(int i=0; i<snapshot.data.documents.length;i++)  {
+                                if(snapshot.data.documents[i].documentID == 'user')
+                                  _participantSnapshot = snapshot.data.documents[i];}
+                              if(_participantSnapshot['users']!=null) {
+                                _boxSizeHeight = 104.0*(_participantSnapshot['users'].length/5).ceil();
+                              return Container(
+                                width: MediaQuery.of(context).size.width - 40,
+                                height: MediaQuery.of(context).size.height * 0.6,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(12),
+                                  color: Colors.black
+                                      .withOpacity(onCheckParticipants ? 0.4 : 0.0),
+                                ),
+                                child:
+                                  DiagonalScrollView(
+                                      enableFling: true,
+                                      enableZoom: true,
+                                      flingVelocityReduction: 0.3,
+                                      minScale: _minScale,
+                                      maxScale: _maxScale,
+                                      maxHeight: _boxSizeHeight,
+                                      maxWidth: _boxSizeWidth,
+                                      onCreated: (DiagonalScrollViewController controller) {
+                                        _controller = controller;
+                                      },
+                                      child:
+                                        Container(
+                                          height: _boxSizeHeight,
+                                          width: _boxSizeWidth,
+                                          child: Stack(
+                                            children: _getChildren(_participantSnapshot),
+                                          ),
+                                        )
+                                    )
+                                );  }
+                              else{
+                                return Container(
+                                    width: MediaQuery.of(context).size.width - 40,
+                                    height: MediaQuery.of(context).size.height * 0.6,
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(12),
+                                      color: Colors.black
+                                          .withOpacity(onCheckParticipants ? 0.4 : 0.0),
+                                    ),
+                                    child:
+                                    Center(
+                                      child: Text('Students yet to join!',
+                                          textAlign: TextAlign.center,
+                                          style: TextStyle(
+                                              color: Colors.white, fontSize: 18)),
+                                    ));}
+                              }
+                          }
+                        )
+                        : onShowDiscussions
                         ? Container(
                             width: MediaQuery.of(context).size.width - 40,
                             height: MediaQuery.of(context).size.height * 0.6,
+                            padding: EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(12),
-                              color: Colors.black
-                                  .withOpacity(checkParticipants ? 0.4 : 0.0),
+                            borderRadius: BorderRadius.circular(12),
+                            color: Colors.white
+                                .withOpacity(onShowDiscussions ? 0.4 : 0.0),
                             ),
-                            child: _users.length == 0
-                                ? Text('No Users Joined!',
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                        color: Colors.white, fontSize: 16))
-                                : DiagonalScrollView(
-                                  enableFling: true,
-                                  flingVelocityReduction: 0.3,
-                                  maxHeight: MediaQuery.of(context).size.height * 0.6,
-                                  maxWidth: MediaQuery.of(context).size.width - 40,
-                                  child: Column(
-                                      children:
-                                          //   List.generate(
-                                          //       _item['userid'].length, (index) {
-                                          // return Text('User ${index+1} : ${_item['userid'][index]}',
-                                          List.generate(_users.length, (index) {
-                                      return Text(
-                                          'User ${index + 1} : ${_users.elementAt(index)}',
-                                          style: TextStyle(
-                                              color: Colors.white, fontSize: 16));
-                                    })),
-                                )
-                            // Center(
-                            //     child: Text(
-                            //   'No Participants yet!',
-                            //   style: TextStyle(
-                            //       color: Colors.white, fontSize: 16),
-                            // ))
-                            // Container(
-                            //     // width: 300,
-                            //     // color: Colors.white.withOpacity(0.3),
-                            //     ),
-                            )
+                            child: Column(
+                              children: [
+                                Center(
+                                  child: Text('Discussions',textScaleFactor: 1.3,)
+                                ),
+                                Expanded(
+                                  child: Container(
+                                    child: StreamBuilder<QuerySnapshot>(
+                                    stream: firestore.collection('live').snapshots(),
+                                    builder: (context, snapshot) {
+                                      if (!snapshot.hasData)
+                                        return Center(
+                                          child: CircularProgressIndicator(
+                                            valueColor: AlwaysStoppedAnimation<Color>(
+                                                Theme.of(context).primaryColor),
+                                          ),
+                                        );
+                                      else{
+                                        for(int i=0; i<snapshot.data.documents.length; i++)
+                                          if(snapshot.data.documents[i].documentID == 'subject_date_hr')
+                                            _discussionSnapshot = snapshot.data.documents[i];
+                                          _listDiscussion(_discussionSnapshot);
+                                        return (_discussionSnapshot['discussion'].isNotEmpty)
+                                            ? SingleChildScrollView(
+                                                child: Column(
+                                                    children: discussionListWidget.toList())
+                                              // child: listItem(_items[0]['disussion'])
+                                            )
+                                            : Center(child: Container(child: Text('No Discussions yet!!')));}
+                                    }
+                          ),
+                                  ),
+                                ),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                  children: <Widget>[
+                                    Container(
+                                      height: 40,
+                                      width: MediaQuery.of(context).size.width*0.60,
+                                      // decoration: BoxDecoration(borderRadius: BorderRadius.circular(20)),
+                                      child: TextField(
+                                        onChanged: (text) {
+                                          if (text == '') {
+                                            setState(() {
+                                              discussionFieldColor = Colors.grey;
+                                            });
+                                          } else {
+                                            setState(() {
+                                              discussionFieldColor = Colors.deepOrange[300];
+                                            });
+                                          }
+                                        },
+                                        controller: _textFieldController,
+                                        // textAlignVertical: TextAlignVertical.center,
+                                        textAlign: TextAlign.start,
+                                        cursorColor: Colors.blue,
+                                        decoration: InputDecoration(
+                                          hintText: 'add to discussions...',
+                                          contentPadding: EdgeInsets.symmetric(horizontal: 12),
+                                          border: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(20),
+                                          ),
+                                          suffixIcon: IconButton(
+                                            onPressed: () {
+                                              _addToDiscussions(_textFieldController.text);
+                                              _textFieldController.clear();
+                                            },
+                                            icon: Icon(Icons.camera_alt),
+                                            color: Colors.blue,
+                                          ),
+                                        ),
+
+                                        // autofocus: true,
+                                        // onSubmitted: (text) {
+                                        //   // print(text);
+                                        //   _addToDiscussions(text);
+                                        //   _textFieldController.clear();
+                                        //   // text = '';
+                                        // },
+                                      ),
+                                    ),
+                                    Container(
+                                        height: 40,
+                                        width: 40,
+                                        decoration: BoxDecoration(
+                                            shape: BoxShape.circle, color: Colors.grey[300]),
+                                        child: GestureDetector(
+                                          child: Icon(Icons.send, color: discussionFieldColor),
+                                          behavior: HitTestBehavior.translucent,
+                                          onTap: () {
+                                            _addToDiscussions(_textFieldController.text);
+                                            _textFieldController.clear();
+                                            setState(() {
+                                              discussionFieldColor = Colors.grey;
+                                            });
+                                          },
+                                        ))
+                                  ],
+                                ),
+                              ],
+                            ),
+                        )
                         : Container(),
                   ),
                 ),
@@ -563,11 +812,11 @@ class _CallPageState extends State<CallPage> {
   Future<void> startRecording(int uid) async {
     await Future.delayed(Duration(seconds: 80));
     print("Starting Recording");
-    String url = 'http://192.168.0.12:8080/start_recording';
+    String url = 'http://192.168.0.12:8080/start_recording/$uid';
     Map<String, String> headers = {"Content-type": "application/json"};
     Map<String, String> params = {"uid":uid.toString()};
     String data = jsonEncode(params);
-    
+
     http.get(url, headers: headers).then((response) {
       // print(response.body);
       // resourceId = json.decode(response.body)['resourceId'];
@@ -575,15 +824,14 @@ class _CallPageState extends State<CallPage> {
     }).catchError((error) => print(error));
   }
 
-  Future<void> stopRecording() async {
+  Future<void> stopRecording(int uid) async {
     print('Stopping Recording....');
-    String url = 'http://192.168.0.12:8080/stop_recording';
+    String url = 'http://192.168.0.12:8080/stop_recording/$uid';
     Map<String, String> headers = {"Content-type": "application/json"};
     Map<String, dynamic> params = {"resourceId": "$resourceId","sid":"$sid"};
     String data = jsonEncode(params);
     await http.get(url, headers: headers).then((response) {
       print(response.body);
-      
     }).catchError((error) => print(error));
   }
 }

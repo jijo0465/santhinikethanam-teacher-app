@@ -62,17 +62,32 @@ class _HomePageState extends State<HomePage> {
                               child: Column(
                                 children: <Widget>[
                                   SizedBox(height: 30),
-                                  DigiMenuCard(
-                                    height: MediaQuery.of(context).size.height *
-                                        0.17,
-                                    width: MediaQuery.of(context).size.width *
-                                        0.91,
-                                    onPressed: () async {
-                                      await Permission.camera.request();
-                                      await Permission.microphone.request();
-                                      Navigator.of(context).pushNamed('/call');
-                                    },
-                                    imagePath: 'assets/images/classroom.png',
+                                  Row(
+                                    
+                                    children: [
+                                      SizedBox(width: 15,),
+                                      DigiMenuCard(
+                                        height: MediaQuery.of(context).size.height *
+                                            0.17,
+                                        width: MediaQuery.of(context).size.width *
+                                            0.61,
+                                        onPressed: () async {
+                                          await Permission.camera.request();
+                                          await Permission.microphone.request();
+                                          Navigator.of(context).pushNamed('/call');
+                                        },
+                                        imagePath: 'assets/images/classroom.png',
+                                      ),
+                                      SizedBox(width:15),
+                                      DigiMenuCard(
+                                        height: MediaQuery.of(context).size.height*0.17,
+                                        width: MediaQuery.of(context).size.width*0.26,
+                                        onPressed: (){
+                                          Navigator.of(context).pushNamed('/classroom_screen');
+                                        },
+                                        imagePath: 'assets/images/classroom.png',
+                                      )
+                                    ],
                                   ),
                                   SizedBox(height: 5),
                                   Row(

@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_youtube/flutter_youtube.dart';
 import 'package:teacher_app/models/playlist.dart';
 import 'package:teacher_app/models/video.dart';
 import 'package:teacher_app/services/knowledge_youtube_service.dart';
@@ -116,37 +117,36 @@ class _KnowledgeBaseState extends State<KnowledgeBase> {
 
   _buildVideo(Video video,int playlistIndex) {
 
-    return GestureDetector(
-      onTap: () {
-        print(video.id);
-        firestore.collection('class_$grade').document('student_subject_1').updateData(
-            {'chapter_${video.channelIndex}' : FieldValue.arrayUnion(
-                [{'name': video.title, 'videoId': video.id,   'chapterName': video.channelTitle}])
-              });
-      },
-//      => Navigator.push(
-//        context,
-//        MaterialPageRoute(
-//          builder: (_) => VideoScreen(id: video.id),
-//        ),
-//      ),
-      child: Container(
+    return Container(
 //        margin: EdgeInsets.symmetric(horizontal: 20.0, vertical: 5.0),
-        padding: EdgeInsets.all(10.0),
-        height: 140.0,
-        decoration: BoxDecoration(
-          color: Colors.white70,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black12,
-              offset: Offset(0, 1),
-              blurRadius: 6.0,
-            ),
-          ],
-        ),
-        child: Row(
-          children: <Widget>[
-            Container(
+      padding: EdgeInsets.all(10.0),
+      height: 140.0,
+      decoration: BoxDecoration(
+        color: Colors.white70,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black12,
+            offset: Offset(0, 1),
+            blurRadius: 6.0,
+          ),
+        ],
+      ),
+      child: Row(
+        children: <Widget>[
+          GestureDetector(
+            behavior: HitTestBehavior.translucent,
+            onTap: () {
+              print(video.id);
+              FlutterYoutube.playYoutubeVideoById(
+                  appBarColor: Colors.white,
+                  backgroundColor: Colors.white,
+                  apiKey: "AIzaSyCCujdADpW5_7jmJVX4kqSWR3-4TFqN0Mg",
+                  videoId: video.id,
+                  autoPlay: true,
+                  fullScreen: true
+              );
+            },
+            child: Container(
               width: 150.0,
               child: Stack(
                 children: <Widget>[
@@ -161,44 +161,74 @@ class _KnowledgeBaseState extends State<KnowledgeBase> {
                 ],
               ),
             ),
-            SizedBox(width: 10.0),
-            Expanded(
-              child: Column(
-                children: <Widget>[
-                  Flexible(
-                    flex: 1,
-                    child: Text(
-                      video.channelTitle,
-                      style: TextStyle(fontWeight: FontWeight.w700)),
-                  ),
-                  Flexible(
-                    flex: 3,
-                    child: Text(
-                      video.title,
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontSize: 16.0,
-                        fontWeight: FontWeight.w500
-                      ),
+          ),
+          SizedBox(width: 10.0),
+          Expanded(
+            child: Column(
+              children: <Widget>[
+                Flexible(
+                  flex: 1,
+                  child: Text(
+                    video.channelTitle,
+                    style: TextStyle(fontWeight: FontWeight.w700)),
+                ),
+                Flexible(
+                  flex: 3,
+                  child: Text(
+                    video.title,
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 16.0,
+                      fontWeight: FontWeight.w500
                     ),
                   ),
-                  Flexible(
-                    flex: 1,
-                    child: Align(
-                      alignment: Alignment.bottomRight,
-                      child: RaisedButton(
-                          child: Text('Share'),
-                          elevation: 8,
-                          color: Theme.of(context).primaryColor.withOpacity(0.7),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                          onPressed: (){}),
-                    ),
-                  )
-                ],
-              ),
+                ),
+                Flexible(
+                  flex: 1,
+                  child: Align(
+                    alignment: Alignment.bottomRight,
+                    child: RaisedButton(
+                        child: Text('Share'),
+                        elevation: 8,
+                        color: Theme.of(context).primaryColor.withOpacity(0.7),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        onPressed: (){
+                          showDialog(
+                            context: context,
+                            barrierDismissible: true,
+                            builder: (BuildContext context) {
+                              // return object of type Dialog
+                              return AlertDialog(
+                                title: new Text("Share to student KnowledgeBase ?"),
+                                content: new Text("Class : $grade \nChapter : ${video.channelTitle}"),
+                                actions: <Widget>[
+                                  // usually buttons at the bottom of the dialog
+                                  new FlatButton(
+                                    child: new Text("Close"),
+                                    onPressed: () {
+                                      Navigator.of(context).pop();
+                                    },
+                                  ),
+                                  FlatButton(
+                                    child: Text("Share"),
+                                    onPressed: () {
+                                      firestore.collection('class_$grade').document('student_subject_1').updateData(
+                                          {'chapter_${video.channelIndex}' : FieldValue.arrayUnion(
+                                              [{'name': video.title, 'videoId': video.id, 'chapterName': video.channelTitle}])
+                                          }).then((value) => Navigator.of(context).pop());
+                                    },
+                                  ),
+                                ],
+                              );
+                            },
+                          );
+                        }),
+                  ),
+                )
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
