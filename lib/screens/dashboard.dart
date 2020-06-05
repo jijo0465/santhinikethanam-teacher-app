@@ -74,6 +74,8 @@ class _HomePageState extends State<HomePage> {
                                         onPressed: () async {
                                           await Permission.camera.request();
                                           await Permission.microphone.request();
+                                          await Permission.storage.request();
+                                          await Permission.photos.request();
                                           Navigator.of(context).pushNamed('/call');
                                         },
                                         imagePath: 'assets/images/classroom.png',
