@@ -19,8 +19,11 @@ import 'package:file_picker/file_picker.dart';
 class DiscussionsScreen extends StatefulWidget {
   // final Grade grade = Grade();
   // final Student student;
+  final String date;
+  final String grade;
+  final int period;
 
-  const DiscussionsScreen({Key key}) : super(key: key);
+  const DiscussionsScreen({Key key, this.date, this.grade, this.period}) : super(key: key);
 
   @override
   _DiscussionsScreenState createState() => _DiscussionsScreenState();
@@ -43,10 +46,11 @@ class _DiscussionsScreenState extends State<DiscussionsScreen> {
   Firestore firestore = Firestore.instance;
   VideoPlayerController _playerController;
   Color color = Colors.grey;
-  File imageURI;
+  File file;
   List<Asset> images = List<Asset>();
   String error = 'No Error Dectected';
   ValueNotifier<Duration> playtime = ValueNotifier(Duration(seconds: 0));
+  bool uploading = false;
 
   // Future getImage() async {
   //   var image = await ImagePicker.pickImage(source: ImageSource.camera);
@@ -210,11 +214,60 @@ class _DiscussionsScreenState extends State<DiscussionsScreen> {
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     Container(
-                      child: IconButton(
+                      child: uploading?new Center(child: new CircularProgressIndicator()) :IconButton(
                           icon: Icon(CupertinoIcons.video_camera_solid),
                           onPressed: () async {
-                            File file =
+                            file =
                                 await FilePicker.getFile(type: FileType.video);
+                            print(file.path);
+                            showDialog(
+                              context: context,
+                              barrierDismissible: true,
+                              builder: (BuildContext context) {
+                                // return object of type Dialog
+                                return AlertDialog(
+                                  title: new Text("Share video to Classroom?"),
+                                  content: new Text("Class : 10 \nDate : <DATE>"),
+                                  actions: <Widget>[
+                                    // usually buttons at the bottom of the dialog
+                                    new FlatButton(
+                                      child: new Text("Close"),
+                                      onPressed: () {
+                                        Navigator.of(context).pop();
+                                      },
+                                    ),
+                                    FlatButton(
+                                      child: Text("Share"),
+                                      onPressed: () async {
+                                        setState(() {
+                                          uploading = true;
+                                        });
+                                        Navigator.of(context).pop();
+                                          StorageReference storageReference;
+                                          if (file!=null) {
+                                            storageReference =
+                                                FirebaseStorage.instance.ref().child("videos/${widget.grade}/${widget.date}/${widget.period}");
+                                          }
+                                          final StorageUploadTask uploadTask = storageReference.putFile(file);
+                                          final StorageTaskSnapshot downloadUrl = (await uploadTask.onComplete);
+                                          final String url = (await downloadUrl.ref.getDownloadURL());
+                                          print("URL is $url");
+                                          setState(() {
+                                            uploading = false;
+                                          });
+//                                        GET URL \/ \/ \/
+//                                        StorageReference ref =
+//                                        FirebaseStorage.instance.ref().child("videos/${widget.grade}/${widget.date}/${widget.period}");
+//                                        String url2 = (await ref.getDownloadURL()).toString();
+//                                        print(url2);
+                                      },
+                                    ),
+                                  ],
+                                );
+                              },
+                            );
+
+
                           }),
                     ),
                     Text('Upload Class')

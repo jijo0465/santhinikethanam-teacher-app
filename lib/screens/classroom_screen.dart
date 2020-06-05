@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:teacher_app/components/digicampus_appbar.dart';
+import 'package:teacher_app/screens/discussions_screen.dart';
 
 class ClassroomScreen extends StatefulWidget {
   const ClassroomScreen({Key key}) : super(key: key);
@@ -51,53 +52,41 @@ class _ClassroomScreenState extends State<ClassroomScreen> {
   Widget dateTiles(int i) {
     DateFormat _dateFormat = DateFormat.yMMMd();
     DateFormat _dateFormatDay = DateFormat.E();
+//    DateFormat _dateFormatSave = DateFormat.yMd();
     var date = DateTime.now().subtract(Duration(days: i));
     int hrs = 11;
     // print(hrs);
     // int mts = date.minute;
     String formattedDay = _dateFormatDay.format(date);
     String formattedDate = _dateFormat.format(date);
-   List<Map<String, dynamic>> timeTableList = [
-    {
-      '0': 'Period 1\nClass VI',
-      '1': 'Period 2\nClass VII',
-      '2': 'Period 3\nClass VII',
-      '3': 'Period 4\nClass VI',
-      '4': 'Period 5\nClass VII',
-      '5': 'Period 6\nClass VI',
-    },
-    {
-      '0': 'Period 1\nClass VI',
-      '1': 'Period 2\nClass VII',
-      '2': 'Period 3\nClass VII',
-      '3': 'Period 4\nClass VI',
-      '4': 'Period 5\nClass VII',
-      '5': 'Period 6\nClass VI',
-    },
-    {
-      '0': 'Period 1\nClass VI',
-      '1': 'Period 2\nClass VII',
-      '2': 'Period 3\nClass VII',
-      '3': 'Period 4\nClass VI',
-      '4': 'Period 5\nClass VII',
-      '5': 'Period 6\nClass VI',
-    },
-    {
-      '0': 'Period 1\nClass VI',
-      '1': 'Period 2\nClass VII',
-      '2': 'Period 3\nClass VII',
-      '3': 'Period 4\nClass VI',
-      '4': 'Period 5\nClass VII',
-      '5': 'Period 6\nClass VI',
-    },
-    {
-      '0': 'Period 1\nClass VI',
-      '1': 'Period 2\nClass VII',
-      '2': 'Period 3\nClass VII',
-      '3': 'Period 4\nClass VI',
-      '4': 'Period 5\nClass VII',
-      '5': 'Period 6\nClass VI',
-    }
+    String saveFormattedDate = DateFormat('dd-MM-yyyy').format(date);
+
+    List<Map<String, dynamic>> timeTableList = [
+     {
+       '0': 'Period 1\nClass 6',
+       '1': 'Period 2\nClass 7',
+       '2': 'Period 2\nClass 7',
+     },
+     {
+       '0': 'Period 3\nClass 6',
+       '1': 'Period 1\nClass 7',
+       '2': 'Period 3\nClass 7',
+     },
+     {
+      '0': 'Period 2\nClass 6',
+      '1': 'Period 1\nClass 8',
+      '2': 'Period 3\nClass 7',
+     },
+     {
+      '0': 'Period 1\nClass 6',
+      '1': 'Period 2\nClass 7',
+      '2': 'Period 2\nClass 7',
+     },
+     {
+       '0': 'Period 2\nClass 7',
+       '1': 'Period 1\nClass 8',
+       '2': 'Period 3\nClass 8',
+     },
   ];
     Map<String, dynamic> timeTable;
     print(formattedDay);
@@ -118,7 +107,7 @@ class _ClassroomScreenState extends State<ClassroomScreen> {
         timeTable = timeTableList[4];
         break;
       default:
-        timeTable = timeTableList[2];
+        return Container();
     }
     print('num: ${timeTable['0']}');
 
@@ -169,17 +158,19 @@ class _ClassroomScreenState extends State<ClassroomScreen> {
                           Colors.greenAccent[400]
                         ])),
                         child: Row(
-                            children: List.generate(6, (index) {
+                            children: List.generate(timeTableList.length, (index) {
                           // print(timeTable['$index'].toString());
                           return Row(
                             children: <Widget>[
                               GestureDetector(
                                 behavior: HitTestBehavior.translucent,
                                 onTap: (){
+                                  Navigator.of(context).push(MaterialPageRoute(builder: (context) =>
+                                      DiscussionsScreen(date: saveFormattedDate, grade: timeTable['$index'].toString().substring(timeTable['$index'].toString().length-2),period: index)));
                                   print(hrs);
-                                  hrs == (9+index) && i == 0
-                                  ? Navigator.of(context).pushNamed('/live')
-                                  : Navigator.of(context).pushNamed('/discussions');
+//                                  hrs == (9+index) && i == 0
+//                                  ? Navigator.of(context).pushNamed('/live')
+//                                  : Navigator.of(context).pushNamed('/discussions');
                                 },
                                 child: Container(
                                     height: 80,
@@ -208,22 +199,6 @@ class _ClassroomScreenState extends State<ClassroomScreen> {
                                             textAlign: TextAlign.center,
                                             overflow: TextOverflow.clip,
                                           ),
-                                          hrs == (9+index) && i == 0
-                                          ?Align(
-                                            alignment: Alignment.bottomRight,
-                                            child: IntrinsicWidth(
-                                              child: Row(
-                                                mainAxisAlignment: MainAxisAlignment.end,
-                                                children: <Widget>[
-                                                  Icon(Icons.my_location,color: Colors.red[800],),
-                                                  SizedBox(width: 8,),
-                                                  Text('Live' ,style: TextStyle(color: Colors.red[900],fontWeight: FontWeight.w700),),
-                                                  SizedBox(width: 8,),
-                                                ],
-                                              ),
-                                            ),
-                                          )
-                                          :Container()
                                         ],
                                       ),
                                     )),
@@ -273,12 +248,19 @@ class _ClassroomScreenState extends State<ClassroomScreen> {
                 padding: EdgeInsets.only(left: 50),
                 margin: EdgeInsets.only(top: 10, bottom: 10),
                 child: Row(
-                    children: List.generate(8, (index) {
-                  hr = 9 + index;
-                  return Row(
-                    children: <Widget>[Text('$hr:00'), SizedBox(width: 65)],
-                  );
-                }))),
+//                    children: List.generate(8, (index) {
+//                  hr = 9 + index;
+//                  return Row(
+//                    children: <Widget>[Text('$hr:00'), SizedBox(width: 65)],
+//                  );
+//                })
+                children: [
+                  Text('09:00'), SizedBox(width: 65),
+                  Text('10:00'), SizedBox(width: 65),
+                  Text('11:00'), SizedBox(width: 65),
+                  Text('12:00'), SizedBox(width: 65)
+                ],
+                )),
           ),
         ),
         Expanded(

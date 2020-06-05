@@ -543,72 +543,72 @@ class _CallPageState extends State<CallPage> with SingleTickerProviderStateMixin
     return children;
   }
 
-  _listDiscussion(var item) {
-    for (; widgetIndex < item['discussion'].length; widgetIndex++) {
-      _discussionData.insert(widgetIndex, {
-        'id': item['discussion'][widgetIndex]['id'],
-        'text': item['discussion'][widgetIndex]['text'],
-        'time': item['discussion'][widgetIndex]['time']
-      });
-      print(_discussionData[widgetIndex]['text']);
-      discussionListWidget.add(Column(children: <Widget>[
-        Container(
-          height: 50,
-          width: MediaQuery
-              .of(context)
-              .size
-              .width * 5 / 6,
-          child: Row(
-            children: <Widget>[
-              Container(
-                height: 40,
-                width: 40,
-                // margin: EdgeInsets.only(left: 20),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  image: DecorationImage(
-                      image:
-                      NetworkImage(
-                          'https://i.pinimg.com/236x/e4/f7/5e/e4f75e2f6b1ef0afa711278b655dfe4a.jpg'),
-                      fit: BoxFit.fill),
-                ),
-              ),
-              Expanded(
-                  child: Container(
-                    padding: EdgeInsets.only(left: 20, right: 20),
-                    height: 50,
-                    width: MediaQuery
-                        .of(context)
-                        .size
-                        .width,
-                    child: Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(item['discussion'][widgetIndex]['text']),
-                    ),
-                  )),
-            ],
-          ),
-        ),
-        Divider(
-          indent: 5,
-          endIndent: 5,
-          color: Colors.black38,
-          // thickness: 2,
-        )
-      ]));
-    }
-  }
+//  _listDiscussion(var item) {
+//    for (; widgetIndex < item['discussion'].length; widgetIndex++) {
+//      _discussionData.insert(widgetIndex, {
+//        'id': item['discussion'][widgetIndex]['id'],
+//        'text': item['discussion'][widgetIndex]['text'],
+//        'time': item['discussion'][widgetIndex]['time']
+//      });
+//      print(_discussionData[widgetIndex]['text']);
+//      discussionListWidget.add(Column(children: <Widget>[
+//        Container(
+//          height: 50,
+//          width: MediaQuery
+//              .of(context)
+//              .size
+//              .width * 5 / 6,
+//          child: Row(
+//            children: <Widget>[
+//              Container(
+//                height: 40,
+//                width: 40,
+//                // margin: EdgeInsets.only(left: 20),
+//                decoration: BoxDecoration(
+//                  shape: BoxShape.circle,
+//                  image: DecorationImage(
+//                      image:
+//                      NetworkImage(
+//                          'https://i.pinimg.com/236x/e4/f7/5e/e4f75e2f6b1ef0afa711278b655dfe4a.jpg'),
+//                      fit: BoxFit.fill),
+//                ),
+//              ),
+//              Expanded(
+//                  child: Container(
+//                    padding: EdgeInsets.only(left: 20, right: 20),
+//                    height: 50,
+//                    width: MediaQuery
+//                        .of(context)
+//                        .size
+//                        .width,
+//                    child: Align(
+//                      alignment: Alignment.centerLeft,
+//                      child: Text(item['discussion'][widgetIndex]['text']),
+//                    ),
+//                  )),
+//            ],
+//          ),
+//        ),
+//        Divider(
+//          indent: 5,
+//          endIndent: 5,
+//          color: Colors.black38,
+//          // thickness: 2,
+//        )
+//      ]));
+//    }
+//  }
 
-  _addToDiscussions(String text) async {
-    var addText = [
-      {'id': 3001, 'text': text, 'time': DateTime.now().toUtc()}
-    ];
-    DocumentReference documentReference =
-    firestore.collection('live').document('subject_date_hr');
-    firestore.runTransaction((transaction) async {
-      await transaction.update(
-          documentReference, {'discussion': FieldValue.arrayUnion(addText)});
-    });
+//  _addToDiscussions(String text) async {
+//    var addText = [
+//      {'id': 3001, 'text': text, 'time': DateTime.now().toUtc()}
+//    ];
+//    DocumentReference documentReference =
+//    firestore.collection('live').document('subject_date_hr');
+//    firestore.runTransaction((transaction) async {
+//      await transaction.update(
+//          documentReference, {'discussion': FieldValue.arrayUnion(addText)});
+//    });
     // documentReference.get().then((doc){
     //   if(doc.exists){
     //     documentReference.updateData({'disussion':FieldValue.arrayUnion(comment)});
@@ -616,7 +616,7 @@ class _CallPageState extends State<CallPage> with SingleTickerProviderStateMixin
     //     documentReference.setData({'disussion':FieldValue.arrayUnion(comment)});
     //   }
     // });
-  }
+//  }
 
   @override
   Widget build(BuildContext context) {
@@ -641,7 +641,8 @@ class _CallPageState extends State<CallPage> with SingleTickerProviderStateMixin
               child: DigiCampusAppbar(
                 icon: Icons.close,
                 onDrawerTapped: () {
-                  Navigator.of(context).pop();
+                  _onCallEnd(context);
+//                  Navigator.of(context).pop();
                 },
               ),
             ),
@@ -932,7 +933,7 @@ class _CallPageState extends State<CallPage> with SingleTickerProviderStateMixin
   }
 
   _startVideoRecording() async {
-      bool start = await FlutterScreenRecording.startRecordScreen("Title");
+      bool start = await FlutterScreenRecording.startRecordScreen("${DateTime.now().day}_${DateTime.now().month}_${DateTime.now().year}");
       print('RECORD STATUS : $start');
   }
 
