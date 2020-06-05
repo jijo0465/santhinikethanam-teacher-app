@@ -15,6 +15,7 @@ import 'package:teacher_app/states/teacher_state.dart';
 import 'package:video_player/video_player.dart';
 import 'package:multi_image_picker/multi_image_picker.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:chewie/chewie.dart';
 
 class DiscussionsScreen extends StatefulWidget {
   // final Grade grade = Grade();
@@ -47,6 +48,7 @@ class _DiscussionsScreenState extends State<DiscussionsScreen> {
   List<Asset> images = List<Asset>();
   String error = 'No Error Dectected';
   ValueNotifier<Duration> playtime = ValueNotifier(Duration(seconds: 0));
+  // ChewieController _chewieController;
 
   // Future getImage() async {
   //   var image = await ImagePicker.pickImage(source: ImageSource.camera);
@@ -99,6 +101,28 @@ class _DiscussionsScreenState extends State<DiscussionsScreen> {
               _playerController.play();
             });
           });
+    // _chewieController = ChewieController(
+    //   allowedScreenSleep: false,
+    //   allowFullScreen: true,
+    //   deviceOrientationsAfterFullScreen: [
+    //     DeviceOrientation.landscapeRight,
+    //     DeviceOrientation.landscapeLeft,
+    //     DeviceOrientation.portraitUp,
+    //     DeviceOrientation.portraitDown,
+    //   ],
+    //   videoPlayerController: _playerController,
+    //   autoInitialize: true,
+    //   autoPlay: true,
+    //   showControls: true,
+    // );
+    // _chewieController.addListener(() {
+    //   if (_chewieController.isFullScreen) {
+    //     SystemChrome.setPreferredOrientations([
+    //       DeviceOrientation.landscapeRight,
+    //       DeviceOrientation.landscapeLeft,
+    //     ]);
+    //   }
+    // });
     _playerController.addListener(() async {
       await Future.delayed(Duration(seconds: 1));
       playtime.value = await _playerController.position;
@@ -123,9 +147,9 @@ class _DiscussionsScreenState extends State<DiscussionsScreen> {
     return Scaffold(
         body: Container(
       child: Column(children: <Widget>[
-        DigiCampusAppbar(
-          icon: Icons.close,
-          onDrawerTapped: () => Navigator.of(context).pop(),
+        Container(
+          color: Theme.of(context).primaryColor,
+          height: MediaQuery.of(context).padding.top,
         ),
         Container(
           width: double.infinity,
@@ -148,17 +172,44 @@ class _DiscussionsScreenState extends State<DiscussionsScreen> {
                       child: ValueListenableBuilder<Duration>(
                         valueListenable: playtime,
                         builder: (context, val, _) {
+                          print(_playerController.value.duration);
                           print(val);
-                          return Text('${val.inMinutes} : ${val.inSeconds}');
+                          return Text(
+                            '${val.inMinutes} : ${val.inSeconds % 60}',
+                            style: TextStyle(color: Colors.white),
+                          );
                         },
                       ),
                     ),
+                    Align(
+                      alignment: Alignment.bottomRight,
+                      child: ValueListenableBuilder<Duration>(
+                        builder: (context, val, _) {
+                          return Text(
+                            '${_playerController.value.duration.inHours}:${_playerController.value.duration.inMinutes}:${_playerController.value.duration.inSeconds % 60}',
+                            style: TextStyle(color: Colors.white),
+                          );
+                        },
+                        valueListenable: playtime,
+                      ),
+                    ),
+                    Align(
+                        alignment: Alignment.topLeft,
+                        child: IconButton(
+                            icon: Icon(
+                              Icons.arrow_back_ios,
+                              color: Colors.white,
+                            ),
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                            })),
                     Center(
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
                         children: [
                           IconButton(
-                              icon: Icon(Icons.fast_rewind),
+                              icon:
+                                  Icon(Icons.fast_rewind, color: Colors.white),
                               onPressed: () async {
                                 Duration duration = Duration(
                                     seconds: (await _playerController.position)
@@ -167,6 +218,8 @@ class _DiscussionsScreenState extends State<DiscussionsScreen> {
                                 _playerController.seekTo(duration);
                               }),
                           FloatingActionButton(
+                            backgroundColor:
+                                Theme.of(context).primaryColor.withOpacity(0.7),
                             onPressed: () {
                               setState(() {
                                 _playerController.value.isPlaying
@@ -181,7 +234,10 @@ class _DiscussionsScreenState extends State<DiscussionsScreen> {
                             ),
                           ),
                           IconButton(
-                              icon: Icon(Icons.fast_forward),
+                              icon: Icon(
+                                Icons.fast_forward,
+                                color: Colors.white,
+                              ),
                               onPressed: () async {
                                 Duration duration = Duration(
                                     seconds: (await _playerController.position)
@@ -193,14 +249,14 @@ class _DiscussionsScreenState extends State<DiscussionsScreen> {
                       ),
                     ),
                     Align(
-                        alignment: Alignment.bottomRight,
+                        alignment: Alignment.topRight,
                         child: IconButton(
                             icon: Icon(
                               Icons.fullscreen,
-                              size: 40,
-                              color: Colors.black,
+                              size: 30,
+                              color: Colors.white,
                             ),
-                            onPressed: null))
+                            onPressed: () {}))
                   ],
                 ),
               ),
@@ -227,10 +283,9 @@ class _DiscussionsScreenState extends State<DiscussionsScreen> {
 
         SizedBox(height: 5),
         Padding(
-          padding: const EdgeInsets.only(left: 8),
+          padding: const EdgeInsets.only(left:8),
           child: Text(
             'Discussions',
-            textAlign: TextAlign.left,
             style: TextStyle(
               color: Colors.black,
               fontSize: 16,
@@ -289,7 +344,12 @@ class _DiscussionsScreenState extends State<DiscussionsScreen> {
                 // },
               ),
             ),
-            IconButton(icon: Icon(Icons.book), onPressed: () {}),
+            IconButton(
+                icon: Icon(Icons.picture_as_pdf),
+                onPressed: () async {
+                  File file = await FilePicker.getFile(
+                      type: FileType.custom, allowedExtensions: ['pdf']);
+                }),
             Container(
                 height: 40,
                 width: 40,
@@ -302,13 +362,14 @@ class _DiscussionsScreenState extends State<DiscussionsScreen> {
                     _addToDiscussions(_textFieldController.text);
                     _textFieldController.clear();
                     setState(() {
-                      color = Colors.grey;
+                      color = Colors.blue;
                     });
                   },
                 ))
           ],
         ),
         SizedBox(height: 12),
+        Container()
         // StreamBuilder<QuerySnapshot>(
         //     // key: _key,
         //     stream: firestore.collection('classroom_${grade.id}').snapshots(),

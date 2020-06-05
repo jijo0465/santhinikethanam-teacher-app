@@ -10,6 +10,10 @@ class BusTrackingScreen extends StatelessWidget {
       body: Stack(
         children: <Widget>[
           Container(
+          color: Theme.of(context).primaryColor,
+          height: MediaQuery.of(context).padding.top,
+        ),
+          Container(
             width: double.infinity,
             height: double.infinity,
             color: Colors.black38,

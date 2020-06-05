@@ -9,49 +9,74 @@ class DigiCampusAppbar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     Color color = Theme.of(context).primaryColor;
-    return Container(
-      alignment: Alignment.bottomCenter,
-      padding: EdgeInsets.only(bottom: 20),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: <Widget>[
-          Padding(
-            padding: const EdgeInsets.only(left: 30),
-            child: GestureDetector(
-              onTap: onDrawerTapped,
-              child: Container(
-                child: Icon(icon, color: Colors.white),
-              ),
-            ),
-          ),
-          Text(
-            'DIGICAMPUS',
-            style: TextStyle(
-                letterSpacing: 1,
-                color: Colors.white,
-                fontSize: 20,
-                fontWeight: FontWeight.w400),
-          ),
-          Padding(
-            padding: const EdgeInsets.only(right: 30),
-            child: Icon(
-              Icons.notification_important,
-              color: Colors.white,
-            ),
-          )
-        ],
-      ),
-      decoration: BoxDecoration(
-          gradient: LinearGradient(
+    return Column(
+      children: <Widget>[
+        Container(
+          height: MediaQuery.of(context).padding.top,
+          width: double.infinity,
+          decoration: BoxDecoration(
+              gradient: LinearGradient(
             begin: Alignment.topRight,
             end: Alignment.bottomLeft,
             colors: [color.withOpacity(0.8), color, color.withOpacity(0.8)],
+            // tileMode: TileMode.repeated,
+          )),
+        ),
+        Container(
+          alignment: Alignment.center,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              Padding(
+                padding: const EdgeInsets.only(left: 30),
+                child: GestureDetector(
+                  onTap: onDrawerTapped,
+                  child: Container(
+                    child: Icon(icon, color: Colors.white),
+                  ),
+                ),
+              ),
+              // Text(
+              //   'DigiCampus',
+              //   style: TextStyle(
+              //       letterSpacing: 1,
+              //       color: Colors.white,
+              //       fontSize: 20,
+              //       fontWeight: FontWeight.w600),
+              // ),
+              Container(
+                  height: 28,
+                  width: 28,
+                  child: Image.asset('assets/images/digi_campus_logo.png',
+                      fit: BoxFit.fill)),
+              Padding(
+                padding: const EdgeInsets.only(right: 30),
+                child: Container(
+                    height: 30,
+                    width: 30,
+                    child: IconButton(
+                        icon: Icon(Icons.notification_important,color: Colors.white,),
+                        onPressed: (){})),
+              ),
+
+              // Icon(
+              //   Icons.notification_important,
+              //   color: Colors.white,
+              // ),
+            ],
           ),
-          borderRadius: BorderRadius.only(
-              bottomLeft: Radius.circular(30),
-              bottomRight: Radius.circular(30))),
-      height: 110 - MediaQuery.of(context).padding.top,
-      width: MediaQuery.of(context).size.width,
+          decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topRight,
+                end: Alignment.bottomLeft,
+                colors: [color.withOpacity(0.8), color, color.withOpacity(0.8)],
+                // tileMode: TileMode.repeated,
+              ),
+              ),
+          height: 50,
+          width: MediaQuery.of(context).size.width,
+        ),
+      ],
     );
   }
 }
