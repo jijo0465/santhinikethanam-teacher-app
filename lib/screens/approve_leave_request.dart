@@ -19,6 +19,7 @@ class _ApproveLeaveRequestState extends State<ApproveLeaveRequest> {
       children: <Widget>[
         Column(
           children: <Widget>[
+           
             SizedBox(height: 120),
             Padding(
               padding: const EdgeInsets.only(left: 12, right: 12),
