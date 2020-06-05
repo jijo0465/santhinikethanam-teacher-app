@@ -1,10 +1,13 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'dart:ui';
 
 import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:diagonal_scrollview/diagonal_scrollview.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_screen_recording/flutter_screen_recording.dart';
 import 'package:flutter/material.dart';
 import 'package:teacher_app/components/digicampus_appbar.dart';
 import 'package:teacher_app/components/live_stream_settings.dart';
@@ -19,13 +22,13 @@ class CallPage extends StatefulWidget {
   _CallPageState createState() => _CallPageState();
 }
 
-class _CallPageState extends State<CallPage> with SingleTickerProviderStateMixin{
+class _CallPageState extends State<CallPage> with SingleTickerProviderStateMixin {
   static final _users = <int>[];
   final _infoStrings = <String>[];
   final double _minScale = .6;
   final double _maxScale = 3;
   final TextEditingController _textFieldController =
-    new TextEditingController();
+  new TextEditingController();
   DiagonalScrollViewController _controller;
   AnimationController _animationController;
   Animation _animation;
@@ -41,13 +44,21 @@ class _CallPageState extends State<CallPage> with SingleTickerProviderStateMixin
   int broadcasterUid;
   String resourceId;
   String sid;
+  String videoPath;
+  String _platformVersion = 'Unknown';
+
 //  double appBarHeight = 100;
   double _boxSizeWidth = 520.0;
   double _boxSizeHeight = 104.0;
+
+//  ValueNotifier<bool> onShowToolbar = ValueNotifier(true);
+//  ValueNotifier<bool> onCheckParticipants = ValueNotifier(false);
   bool onShowToolbar = true;
-  bool onShowDiscussions = false;
+
+//  bool onShowDiscussions = false;
   bool onCheckParticipants = false;
   bool muted = false;
+  bool record = false;
   Color discussionFieldColor = Colors.grey;
 
   @override
@@ -72,15 +83,35 @@ class _CallPageState extends State<CallPage> with SingleTickerProviderStateMixin
     );
     _animation = Tween(
         begin: 1.0,
-        end: 0.0 ).animate(_animationController);
+        end: 0.0).animate(_animationController);
 //    _animationController.forward();
     // initialize agora sdk
     initialize();
-    Future.delayed(Duration(seconds: 10)).then((value){
+    Future.delayed(Duration(seconds: 10)).then((value) {
       setState(() {
         onShowToolbar = false;
       });
       _animationController.forward();
+    });
+    initPlatformState();
+  }
+
+  Future<void> initPlatformState() async {
+    String platformVersion;
+    // Platform messages may fail, so we use a try/catch PlatformException.
+    try {
+      platformVersion = await FlutterScreenRecording.platformVersion;
+    } on PlatformException {
+      platformVersion = 'Failed to get platform version.';
+    }
+
+    // If the widget was removed from the tree while the asynchronous platform
+    // message was in flight, we want to discard the reply rather than calling
+    // setState to update our non-existent appearance.
+    if (!mounted) return;
+
+    setState(() {
+      _platformVersion = platformVersion;
     });
   }
 
@@ -128,13 +159,13 @@ class _CallPageState extends State<CallPage> with SingleTickerProviderStateMixin
       });
     };
 
-    AgoraRtcEngine.onJoinChannelSuccess = (
-      String channel,
-      int uid,
-      int elapsed,
-    ) {
+    AgoraRtcEngine.onJoinChannelSuccess = (String channel,
+        int uid,
+        int elapsed,) {
       firestore.collection('live').document('user').setData({'users': null});
-      firestore.collection('live').document('broadcast').setData({'uid':uid}).then((value) {
+      firestore.collection('live').document('broadcast')
+          .setData({'uid': uid})
+          .then((value) {
         startRecording(uid);
         broadcasterUid = uid;
         setState(() {
@@ -190,12 +221,10 @@ class _CallPageState extends State<CallPage> with SingleTickerProviderStateMixin
       });
     };
 
-    AgoraRtcEngine.onFirstRemoteVideoFrame = (
-      int uid,
-      int width,
-      int height,
-      int elapsed,
-    ) {
+    AgoraRtcEngine.onFirstRemoteVideoFrame = (int uid,
+        int width,
+        int height,
+        int elapsed,) {
       print("firstRemoteVideo: $uid ${width}x $height");
       setState(() {
         final info = 'firstRemoteVideo: $uid ${width}x $height';
@@ -283,47 +312,53 @@ class _CallPageState extends State<CallPage> with SingleTickerProviderStateMixin
   /// Toolbar layout
   Widget _toolbar() {
     return Container(
-      width: MediaQuery.of(context).size.width,
+      width: MediaQuery
+          .of(context)
+          .size
+          .width,
       alignment: Alignment.bottomCenter,
-      padding: const EdgeInsets.symmetric(vertical: 48),
+//      padding: const EdgeInsets.symmetric(vertical: 48),
       margin: EdgeInsets.only(bottom: 10),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: <Widget>[
+//          Flexible(
+//            flex: 1,
+//            child: RaisedButton(
+//                shape: CircleBorder(side: BorderSide(color: Colors.white30)),
+//                color: Colors.grey,
+//                onPressed: onCheckParticipants ? null : () {
+//                  setState(() {
+//                    onShowDiscussions = !onShowDiscussions;
+//                  });
+//                  if(!onShowDiscussions)
+//                    Future.delayed(Duration(seconds: 10)).then((value) {
+//                      if(!onCheckParticipants)  {
+//                        _animationController.forward();
+//                        setState(() {
+//                          onShowToolbar = false;
+//                        });
+//                      }
+//                    });
+//                },
+//                child: Icon(
+//                  Icons.chat,
+//                  color: Colors.black54,
+//                  size: 40.0,
+//                )),
+//          ),
           Flexible(
-            flex: 1,
+            flex: 2,
             child: RaisedButton(
                 shape: CircleBorder(side: BorderSide(color: Colors.white30)),
-                color: Colors.grey,
-                onPressed: onCheckParticipants ? null : () {
-                  setState(() {
-                    onShowDiscussions = !onShowDiscussions;
-                  });
-                  if(!onShowDiscussions)
-                    Future.delayed(Duration(seconds: 10)).then((value) {
-                      if(!onCheckParticipants)  {
-                        _animationController.forward();
-                        setState(() {
-                          onShowToolbar = false;
-                        });
-                      }
-                    });
-                },
-                child: Icon(
-                  Icons.chat,
-                  color: Colors.black54,
-                  size: 40.0,
-                )),
-          ),
-          Flexible(
-            flex: 1,
-            child: RaisedButton(
-                shape: CircleBorder(side: BorderSide(color: Colors.white30)),
-                color: Colors.grey,
-                onPressed: onCheckParticipants||onShowDiscussions ? null : _onToggleMute,
+                color: Theme
+                    .of(context)
+                    .primaryColor
+                    .withOpacity(0.6),
+                onPressed: onCheckParticipants ? null : _onToggleMute,
                 child: Icon(
                   muted ? Icons.mic_off : Icons.mic,
-                  color: muted ? Colors.red : Colors.black54,
+                  color: muted ? Colors.red : Colors.white70,
                   size: 40,
                 )),
           ),
@@ -332,48 +367,63 @@ class _CallPageState extends State<CallPage> with SingleTickerProviderStateMixin
             child: RaisedButton(
               shape: CircleBorder(side: BorderSide(color: Colors.white30)),
               color: Colors.black54,
-              onPressed: onCheckParticipants||onShowDiscussions ? null : () => _onCallEnd(context),
+              onPressed: onCheckParticipants ? null : ()
+//              => _onCallEnd(context),
+              {
+                setState(() {
+                  record = !record;
+                });
+                record ? _startVideoRecording()
+                    : _stopVideoRecording();
+              },
               child: Icon(
-                Icons.call_end,
-                color: Colors.red,
+                Icons.fiber_manual_record,
+                color: record ? Colors.redAccent : Theme
+                    .of(context)
+                    .primaryColor
+                    .withOpacity(0.6),
                 size: 80.0,
               ),
             ),
           ),
           Flexible(
-            flex: 1,
+            flex: 2,
             child: RaisedButton(
                 shape: CircleBorder(side: BorderSide(color: Colors.white30)),
-                color: Colors.grey,
-                onPressed: onCheckParticipants||onShowDiscussions ? null : _onSwitchCamera,
+                color: Theme
+                    .of(context)
+                    .primaryColor
+                    .withOpacity(0.6),
+                onPressed: onCheckParticipants ? null : _onSwitchCamera,
                 child: Icon(
                   Icons.switch_camera,
-                  color: Colors.black54,
+                  color: Colors.white70,
                   size: 40.0,
                 )),
           ),
           Flexible(
-            flex: 1,
+            flex: 2,
             child: RaisedButton(
                 shape: CircleBorder(side: BorderSide(color: Colors.white30)),
-                color: Colors.grey,
-                onPressed: onShowDiscussions ?null :() {
+                color: Theme
+                    .of(context)
+                    .primaryColor
+                    .withOpacity(0.6),
+                onPressed: () {
                   setState(() {
                     onCheckParticipants = !onCheckParticipants;
                   });
-                  if(!onCheckParticipants)
+                  if (!onCheckParticipants)
                     Future.delayed(Duration(seconds: 10)).then((value) {
-                      if(!onShowDiscussions)  {
-                        _animationController.forward();
-                        setState(() {
-                          onShowToolbar = false;
-                        });
-                      }
+                      _animationController.forward();
+                      setState(() {
+                        onShowToolbar = false;
+                      });
                     });
                 },
                 child: Icon(
                   Icons.group,
-                  color: Colors.black54,
+                  color: Colors.white70,
                   size: 40.0,
                 )),
           ),
@@ -414,7 +464,10 @@ class _CallPageState extends State<CallPage> with SingleTickerProviderStateMixin
                         ),
                         decoration: BoxDecoration(
                           color:
-                              Theme.of(context).primaryColor.withOpacity(0.3),
+                          Theme
+                              .of(context)
+                              .primaryColor
+                              .withOpacity(0.3),
                           borderRadius: BorderRadius.circular(5),
                         ),
                         child: Text(
@@ -434,8 +487,8 @@ class _CallPageState extends State<CallPage> with SingleTickerProviderStateMixin
   }
 
   void _onCallEnd(BuildContext context) {
-     stopRecording(broadcasterUid);
-     Navigator.pop(context);
+    stopRecording(broadcasterUid);
+    Navigator.pop(context);
   }
 
   void _onToggleMute() {
@@ -457,13 +510,14 @@ class _CallPageState extends State<CallPage> with SingleTickerProviderStateMixin
     num numChildrenX;
     num numChildrenY;
     int cubeId = 1;
-    int totalParticipants = item['users']!=null ?item['users'].length :0;
-    numChildrenY = (totalParticipants/5).ceil();
-    for(int i=0; i<totalParticipants; i++)
-      participantId.insert(i,item['users'][i]);
+    int totalParticipants = item['users'] != null ? item['users'].length : 0;
+    numChildrenY = (totalParticipants / 5).ceil();
+    for (int i = 0; i < totalParticipants; i++)
+      participantId.insert(i, item['users'][i]);
     print('PARTICIPANTS: $totalParticipants');
     for (num x = 0; x < numChildrenY; x++) {
-      numChildrenX = (totalParticipants - (x*5))>5 ?5 :totalParticipants - (x*5);
+      numChildrenX =
+      (totalParticipants - (x * 5)) > 5 ? 5 : totalParticipants - (x * 5);
       for (num y = 0; y < numChildrenX; y++) {
         Widget cube = Container(
           width: childSize,
@@ -500,7 +554,10 @@ class _CallPageState extends State<CallPage> with SingleTickerProviderStateMixin
       discussionListWidget.add(Column(children: <Widget>[
         Container(
           height: 50,
-          width: MediaQuery.of(context).size.width * 5 / 6,
+          width: MediaQuery
+              .of(context)
+              .size
+              .width * 5 / 6,
           child: Row(
             children: <Widget>[
               Container(
@@ -520,7 +577,10 @@ class _CallPageState extends State<CallPage> with SingleTickerProviderStateMixin
                   child: Container(
                     padding: EdgeInsets.only(left: 20, right: 20),
                     height: 50,
-                    width: MediaQuery.of(context).size.width,
+                    width: MediaQuery
+                        .of(context)
+                        .size
+                        .width,
                     child: Align(
                       alignment: Alignment.centerLeft,
                       child: Text(item['discussion'][widgetIndex]['text']),
@@ -536,11 +596,12 @@ class _CallPageState extends State<CallPage> with SingleTickerProviderStateMixin
           // thickness: 2,
         )
       ]));
-  }}
+    }
+  }
 
   _addToDiscussions(String text) async {
     var addText = [
-      {'id': 3001,'text': text, 'time': DateTime.now().toUtc()}
+      {'id': 3001, 'text': text, 'time': DateTime.now().toUtc()}
     ];
     DocumentReference documentReference =
     firestore.collection('live').document('subject_date_hr');
@@ -568,11 +629,14 @@ class _CallPageState extends State<CallPage> with SingleTickerProviderStateMixin
             _viewVideo(),
             _panel(),
             FadeTransition(
-              opacity: _animation,
+                opacity: _animation,
                 child: _toolbar()),
-            AnimatedPositioned(
+            AnimatedContainer(
               duration: Duration(milliseconds: 900),
-              top: onShowToolbar ?10 :-110,
+              height: onShowToolbar ? 110 - MediaQuery
+                  .of(context)
+                  .padding
+                  .top : 0,
               curve: Curves.easeIn,
               child: DigiCampusAppbar(
                 icon: Icons.close,
@@ -581,32 +645,38 @@ class _CallPageState extends State<CallPage> with SingleTickerProviderStateMixin
                 },
               ),
             ),
-            onShowToolbar||onShowDiscussions ?Container()
-            :Container(
+            onShowToolbar ? Container()
+                : Container(
               child: GestureDetector(
-                onTap: () {
-                  _animationController.reverse();
-                  setState(() {
-                  onShowToolbar = true;
-                  });
-                  Future.delayed(Duration(seconds: 10)).then((value) {
-                    if(!onCheckParticipants&&!onShowDiscussions)  {
-                      _animationController.forward();
-                      setState(() {
-                        onShowToolbar = false;
-                      });
-                    }
-              });
-          },
-          behavior: HitTestBehavior.translucent,
-          child: Align(
-              alignment: Alignment.center,
-              child: Container(
-                height: MediaQuery.of(context).size.height,
-                width: MediaQuery.of(context).size.width,
+                  onTap: () {
+                    _animationController.reverse();
+                    setState(() {
+                      onShowToolbar = true;
+                    });
+                    Future.delayed(Duration(seconds: 10)).then((value) {
+                      if (!onCheckParticipants) {
+                        _animationController.forward();
+                        setState(() {
+                          onShowToolbar = false;
+                        });
+                      }
+                    });
+                  },
+                  behavior: HitTestBehavior.translucent,
+                  child: Align(
+                    alignment: Alignment.center,
+                    child: Container(
+                      height: MediaQuery
+                          .of(context)
+                          .size
+                          .height,
+                      width: MediaQuery
+                          .of(context)
+                          .size
+                          .width,
+                    ),
+                  )
               ),
-          )
-        ),
             ),
             Padding(
               padding: const EdgeInsets.all(20.0),
@@ -618,32 +688,47 @@ class _CallPageState extends State<CallPage> with SingleTickerProviderStateMixin
                         sigmaY: onCheckParticipants ? 25 : 0),
                     child: onCheckParticipants
                         ? StreamBuilder<QuerySnapshot>(
-                          stream: firestore.collection('live').snapshots(),
-                          builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
-                            if(!snapshot.hasData)
-                            {
-                              return Center(
-                                child: CircularProgressIndicator(
-                                  valueColor: AlwaysStoppedAnimation<Color>(
-                                      Theme.of(context).primaryColor),
-                                ),
-                              );
+                        stream: firestore.collection('live').snapshots(),
+                        builder: (BuildContext context, AsyncSnapshot<
+                            QuerySnapshot> snapshot) {
+                          if (!snapshot.hasData) {
+                            return Center(
+                              child: CircularProgressIndicator(
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                    Theme
+                                        .of(context)
+                                        .primaryColor),
+                              ),
+                            );
+                          }
+                          else {
+                            for (int i = 0; i <
+                                snapshot.data.documents.length; i++) {
+                              if (snapshot.data.documents[i].documentID ==
+                                  'user')
+                                _participantSnapshot =
+                                snapshot.data.documents[i];
                             }
-                            else  {
-                              for(int i=0; i<snapshot.data.documents.length;i++)  {
-                                if(snapshot.data.documents[i].documentID == 'user')
-                                  _participantSnapshot = snapshot.data.documents[i];}
-                              if(_participantSnapshot['users']!=null) {
-                                _boxSizeHeight = 104.0*(_participantSnapshot['users'].length/5).ceil();
+                            if (_participantSnapshot['users'] != null) {
+                              _boxSizeHeight = 104.0 *
+                                  (_participantSnapshot['users'].length / 5)
+                                      .ceil();
                               return Container(
-                                width: MediaQuery.of(context).size.width - 40,
-                                height: MediaQuery.of(context).size.height * 0.6,
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(12),
-                                  color: Colors.black
-                                      .withOpacity(onCheckParticipants ? 0.4 : 0.0),
-                                ),
-                                child:
+                                  width: MediaQuery
+                                      .of(context)
+                                      .size
+                                      .width - 40,
+                                  height: MediaQuery
+                                      .of(context)
+                                      .size
+                                      .height * 0.6,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(12),
+                                    color: Colors.black
+                                        .withOpacity(
+                                        onCheckParticipants ? 0.4 : 0.0),
+                                  ),
+                                  child:
                                   DiagonalScrollView(
                                       enableFling: true,
                                       enableZoom: true,
@@ -652,150 +737,161 @@ class _CallPageState extends State<CallPage> with SingleTickerProviderStateMixin
                                       maxScale: _maxScale,
                                       maxHeight: _boxSizeHeight,
                                       maxWidth: _boxSizeWidth,
-                                      onCreated: (DiagonalScrollViewController controller) {
+                                      onCreated: (
+                                          DiagonalScrollViewController controller) {
                                         _controller = controller;
                                       },
                                       child:
-                                        Container(
-                                          height: _boxSizeHeight,
-                                          width: _boxSizeWidth,
-                                          child: Stack(
-                                            children: _getChildren(_participantSnapshot),
-                                          ),
-                                        )
-                                    )
-                                );  }
-                              else{
-                                return Container(
-                                    width: MediaQuery.of(context).size.width - 40,
-                                    height: MediaQuery.of(context).size.height * 0.6,
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(12),
-                                      color: Colors.black
-                                          .withOpacity(onCheckParticipants ? 0.4 : 0.0),
-                                    ),
-                                    child:
-                                    Center(
-                                      child: Text('Students yet to join!',
-                                          textAlign: TextAlign.center,
-                                          style: TextStyle(
-                                              color: Colors.white, fontSize: 18)),
-                                    ));}
-                              }
-                          }
-                        )
-                        : onShowDiscussions
-                        ? Container(
-                            width: MediaQuery.of(context).size.width - 40,
-                            height: MediaQuery.of(context).size.height * 0.6,
-                            padding: EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(12),
-                            color: Colors.white
-                                .withOpacity(onShowDiscussions ? 0.4 : 0.0),
-                            ),
-                            child: Column(
-                              children: [
-                                Center(
-                                  child: Text('Discussions',textScaleFactor: 1.3,)
-                                ),
-                                Expanded(
-                                  child: Container(
-                                    child: StreamBuilder<QuerySnapshot>(
-                                    stream: firestore.collection('live').snapshots(),
-                                    builder: (context, snapshot) {
-                                      if (!snapshot.hasData)
-                                        return Center(
-                                          child: CircularProgressIndicator(
-                                            valueColor: AlwaysStoppedAnimation<Color>(
-                                                Theme.of(context).primaryColor),
-                                          ),
-                                        );
-                                      else{
-                                        for(int i=0; i<snapshot.data.documents.length; i++)
-                                          if(snapshot.data.documents[i].documentID == 'subject_date_hr')
-                                            _discussionSnapshot = snapshot.data.documents[i];
-                                          _listDiscussion(_discussionSnapshot);
-                                        return (_discussionSnapshot['discussion'].isNotEmpty)
-                                            ? SingleChildScrollView(
-                                                child: Column(
-                                                    children: discussionListWidget.toList())
-                                              // child: listItem(_items[0]['disussion'])
-                                            )
-                                            : Center(child: Container(child: Text('No Discussions yet!!')));}
-                                    }
-                          ),
-                                  ),
-                                ),
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                  children: <Widget>[
-                                    Container(
-                                      height: 40,
-                                      width: MediaQuery.of(context).size.width*0.60,
-                                      // decoration: BoxDecoration(borderRadius: BorderRadius.circular(20)),
-                                      child: TextField(
-                                        onChanged: (text) {
-                                          if (text == '') {
-                                            setState(() {
-                                              discussionFieldColor = Colors.grey;
-                                            });
-                                          } else {
-                                            setState(() {
-                                              discussionFieldColor = Colors.deepOrange[300];
-                                            });
-                                          }
-                                        },
-                                        controller: _textFieldController,
-                                        // textAlignVertical: TextAlignVertical.center,
-                                        textAlign: TextAlign.start,
-                                        cursorColor: Colors.blue,
-                                        decoration: InputDecoration(
-                                          hintText: 'add to discussions...',
-                                          contentPadding: EdgeInsets.symmetric(horizontal: 12),
-                                          border: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(20),
-                                          ),
-                                          suffixIcon: IconButton(
-                                            onPressed: () {
-                                              _addToDiscussions(_textFieldController.text);
-                                              _textFieldController.clear();
-                                            },
-                                            icon: Icon(Icons.camera_alt),
-                                            color: Colors.blue,
-                                          ),
+                                      Container(
+                                        height: _boxSizeHeight,
+                                        width: _boxSizeWidth,
+                                        child: Stack(
+                                          children: _getChildren(
+                                              _participantSnapshot),
                                         ),
-
-                                        // autofocus: true,
-                                        // onSubmitted: (text) {
-                                        //   // print(text);
-                                        //   _addToDiscussions(text);
-                                        //   _textFieldController.clear();
-                                        //   // text = '';
-                                        // },
-                                      ),
-                                    ),
-                                    Container(
-                                        height: 40,
-                                        width: 40,
-                                        decoration: BoxDecoration(
-                                            shape: BoxShape.circle, color: Colors.grey[300]),
-                                        child: GestureDetector(
-                                          child: Icon(Icons.send, color: discussionFieldColor),
-                                          behavior: HitTestBehavior.translucent,
-                                          onTap: () {
-                                            _addToDiscussions(_textFieldController.text);
-                                            _textFieldController.clear();
-                                            setState(() {
-                                              discussionFieldColor = Colors.grey;
-                                            });
-                                          },
-                                        ))
-                                  ],
-                                ),
-                              ],
-                            ),
-                        )
+                                      )
+                                  )
+                              );
+                            }
+                            else {
+                              return Container(
+                                  width: MediaQuery
+                                      .of(context)
+                                      .size
+                                      .width - 40,
+                                  height: MediaQuery
+                                      .of(context)
+                                      .size
+                                      .height * 0.6,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(12),
+                                    color: Colors.black
+                                        .withOpacity(
+                                        onCheckParticipants ? 0.4 : 0.0),
+                                  ),
+                                  child:
+                                  Center(
+                                    child: Text('Students yet to join!',
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                            color: Colors.white, fontSize: 18)),
+                                  ));
+                            }
+                          }
+                        }
+                    )
+//                        : onShowDiscussions
+//                        ? Container(
+//                            width: MediaQuery.of(context).size.width - 40,
+//                            height: MediaQuery.of(context).size.height * 0.6,
+//                            padding: EdgeInsets.all(12),
+//                            decoration: BoxDecoration(
+//                            borderRadius: BorderRadius.circular(12),
+//                            color: Colors.white
+//                                .withOpacity(onShowDiscussions ? 0.4 : 0.0),
+//                            ),
+//                            child: Column(
+//                              children: [
+//                                Center(
+//                                  child: Text('Discussions',textScaleFactor: 1.3,)
+//                                ),
+//                                Expanded(
+//                                  child: Container(
+//                                    child: StreamBuilder<QuerySnapshot>(
+//                                    stream: firestore.collection('live').snapshots(),
+//                                    builder: (context, snapshot) {
+//                                      if (!snapshot.hasData)
+//                                        return Center(
+//                                          child: CircularProgressIndicator(
+//                                            valueColor: AlwaysStoppedAnimation<Color>(
+//                                                Theme.of(context).primaryColor),
+//                                          ),
+//                                        );
+//                                      else{
+//                                        for(int i=0; i<snapshot.data.documents.length; i++)
+//                                          if(snapshot.data.documents[i].documentID == 'subject_date_hr')
+//                                            _discussionSnapshot = snapshot.data.documents[i];
+//                                          _listDiscussion(_discussionSnapshot);
+//                                        return (_discussionSnapshot['discussion'].isNotEmpty)
+//                                            ? SingleChildScrollView(
+//                                                child: Column(
+//                                                    children: discussionListWidget.toList())
+//                                              // child: listItem(_items[0]['disussion'])
+//                                            )
+//                                            : Center(child: Container(child: Text('No Discussions yet!!')));}
+//                                    }
+//                          ),
+//                                  ),
+//                                ),
+//                                Row(
+//                                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+//                                  children: <Widget>[
+//                                    Container(
+//                                      height: 40,
+//                                      width: MediaQuery.of(context).size.width*0.60,
+//                                      // decoration: BoxDecoration(borderRadius: BorderRadius.circular(20)),
+//                                      child: TextField(
+//                                        onChanged: (text) {
+//                                          if (text == '') {
+//                                            setState(() {
+//                                              discussionFieldColor = Colors.grey;
+//                                            });
+//                                          } else {
+//                                            setState(() {
+//                                              discussionFieldColor = Colors.deepOrange[300];
+//                                            });
+//                                          }
+//                                        },
+//                                        controller: _textFieldController,
+//                                        // textAlignVertical: TextAlignVertical.center,
+//                                        textAlign: TextAlign.start,
+//                                        cursorColor: Colors.blue,
+//                                        decoration: InputDecoration(
+//                                          hintText: 'add to discussions...',
+//                                          contentPadding: EdgeInsets.symmetric(horizontal: 12),
+//                                          border: OutlineInputBorder(
+//                                            borderRadius: BorderRadius.circular(20),
+//                                          ),
+//                                          suffixIcon: IconButton(
+//                                            onPressed: () {
+//                                              _addToDiscussions(_textFieldController.text);
+//                                              _textFieldController.clear();
+//                                            },
+//                                            icon: Icon(Icons.camera_alt),
+//                                            color: Colors.blue,
+//                                          ),
+//                                        ),
+//
+//                                        // autofocus: true,
+//                                        // onSubmitted: (text) {
+//                                        //   // print(text);
+//                                        //   _addToDiscussions(text);
+//                                        //   _textFieldController.clear();
+//                                        //   // text = '';
+//                                        // },
+//                                      ),
+//                                    ),
+//                                    Container(
+//                                        height: 40,
+//                                        width: 40,
+//                                        decoration: BoxDecoration(
+//                                            shape: BoxShape.circle, color: Colors.grey[300]),
+//                                        child: GestureDetector(
+//                                          child: Icon(Icons.send, color: discussionFieldColor),
+//                                          behavior: HitTestBehavior.translucent,
+//                                          onTap: () {
+//                                            _addToDiscussions(_textFieldController.text);
+//                                            _textFieldController.clear();
+//                                            setState(() {
+//                                              discussionFieldColor = Colors.grey;
+//                                            });
+//                                          },
+//                                        ))
+//                                  ],
+//                                ),
+//                              ],
+//                            ),
+//                        )
                         : Container(),
                   ),
                 ),
@@ -814,7 +910,7 @@ class _CallPageState extends State<CallPage> with SingleTickerProviderStateMixin
     print("Starting Recording");
     String url = 'http://192.168.0.12:8080/start_recording/$uid';
     Map<String, String> headers = {"Content-type": "application/json"};
-    Map<String, String> params = {"uid":uid.toString()};
+    Map<String, String> params = {"uid": uid.toString()};
     String data = jsonEncode(params);
 
     http.get(url, headers: headers).then((response) {
@@ -828,10 +924,21 @@ class _CallPageState extends State<CallPage> with SingleTickerProviderStateMixin
     print('Stopping Recording....');
     String url = 'http://192.168.0.12:8080/stop_recording/$uid';
     Map<String, String> headers = {"Content-type": "application/json"};
-    Map<String, dynamic> params = {"resourceId": "$resourceId","sid":"$sid"};
+    Map<String, dynamic> params = {"resourceId": "$resourceId", "sid": "$sid"};
     String data = jsonEncode(params);
     await http.get(url, headers: headers).then((response) {
       print(response.body);
     }).catchError((error) => print(error));
   }
+
+  _startVideoRecording() async {
+      bool start = await FlutterScreenRecording.startRecordScreen("Title");
+      print('RECORD STATUS : $start');
+  }
+
+  _stopVideoRecording() async {
+    String path = await FlutterScreenRecording.stopRecordScreen;
+    print('Recorded File : $path');
+  }
+
 }
