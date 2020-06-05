@@ -50,6 +50,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 height: 40,
                 width: 300,
                 child: TextFormField(
+                  onChanged: (value) => _id = value,
                   decoration: InputDecoration(
                     labelText: "Teacher Id",
                     border: OutlineInputBorder(
@@ -66,6 +67,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 height: 40,
                 width: 300,
                 child: TextFormField(
+                  onChanged: (value) => _password = value,
                   decoration: InputDecoration(
                     labelText: "Password",
                     border: OutlineInputBorder(
