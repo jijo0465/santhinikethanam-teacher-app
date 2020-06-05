@@ -18,7 +18,7 @@ class _ConfirmClassState extends State<ConfirmClass> {
   @override
   Widget build(BuildContext context) {
     return IntrinsicHeight(
-          child: BackdropFilter(
+      child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 2, sigmaY: 2),
         child: Card(
           shape: RoundedRectangleBorder(
@@ -87,7 +87,7 @@ class _ConfirmClassState extends State<ConfirmClass> {
                 SizedBox(height: 8),
                 RaisedButton(
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)
+                      borderRadius: BorderRadius.circular(12)
                   ),
                   onPressed: () async {
                     await Permission.camera.request();

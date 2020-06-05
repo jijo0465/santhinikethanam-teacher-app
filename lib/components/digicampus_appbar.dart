@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 
 class DigiCampusAppbar extends StatelessWidget {
   final VoidCallback onDrawerTapped;
+  final String title;
   final IconData icon;
-  const DigiCampusAppbar({Key key, this.onDrawerTapped, this.icon})
+  const DigiCampusAppbar({Key key, this.onDrawerTapped, this.icon, this.title})
       : super(key: key);
 
   @override
@@ -16,25 +17,24 @@ class DigiCampusAppbar extends StatelessWidget {
           width: double.infinity,
           decoration: BoxDecoration(
               gradient: LinearGradient(
-            begin: Alignment.topRight,
-            end: Alignment.bottomLeft,
-            colors: [color.withOpacity(0.8), color, color.withOpacity(0.8)],
-            // tileMode: TileMode.repeated,
-          )),
+                begin: Alignment.topRight,
+                end: Alignment.bottomLeft,
+                colors: [color.withOpacity(0.8), color, color.withOpacity(0.8)],
+                // tileMode: TileMode.repeated,
+              )),
         ),
         Container(
           alignment: Alignment.center,
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            mainAxisAlignment: MainAxisAlignment.start,
             children: <Widget>[
-              Padding(
-                padding: const EdgeInsets.only(left: 30),
-                child: GestureDetector(
-                  onTap: onDrawerTapped,
-                  child: Container(
-                    child: Icon(icon, color: Colors.white),
-                  ),
-                ),
+              Container(
+                width: 60,
+                child: IconButton(
+                  padding:EdgeInsets.only(left: 12,right: 12),
+                  icon:Icon(icon, color: Colors.white,size: 22,),onPressed:
+                onDrawerTapped
+                  ,),
               ),
               // Text(
               //   'DigiCampus',
@@ -44,35 +44,39 @@ class DigiCampusAppbar extends StatelessWidget {
               //       fontSize: 20,
               //       fontWeight: FontWeight.w600),
               // ),
-              Container(
-                  height: 28,
-                  width: 28,
-                  child: Image.asset('assets/images/digi_campus_logo.png',
-                      fit: BoxFit.fill)),
-              Padding(
-                padding: const EdgeInsets.only(right: 30),
+              Expanded(
                 child: Container(
-                    height: 30,
-                    width: 30,
-                    child: IconButton(
-                        icon: Icon(Icons.notification_important,color: Colors.white,),
-                        onPressed: (){})),
-              ),
+                  alignment: Alignment.center,
+//                  child: Image.asset('assets/images/digi_campus_logo.png',
+//                      fit: BoxFit.fill)),
+                  child: Text('$title',style: TextStyle(color: Colors.white,fontSize: 14),),
+//              Padding(
+//                padding: const EdgeInsets.only(right: 30),
+//                child: Container(
+//                    height: 30,
+//                    width: 30,
+//                    child: IconButton(
+//                        icon: Icon(Icons.notification_important,color: Colors.white,),
+//                        onPressed: (){})),
+//              ),
 
-              // Icon(
-              //   Icons.notification_important,
-              //   color: Colors.white,
-              // ),
+                  // Icon(
+                  //   Icons.notification_important,
+                  //   color: Colors.white,
+                  // ),
+                ),
+              ),
+            SizedBox(width: 60,)
             ],
           ),
           decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topRight,
-                end: Alignment.bottomLeft,
-                colors: [color.withOpacity(0.8), color, color.withOpacity(0.8)],
-                // tileMode: TileMode.repeated,
-              ),
-              ),
+            gradient: LinearGradient(
+              begin: Alignment.topRight,
+              end: Alignment.bottomLeft,
+              colors: [color.withOpacity(0.8), color, color.withOpacity(0.8)],
+              // tileMode: TileMode.repeated,
+            ),
+          ),
           height: 50,
           width: MediaQuery.of(context).size.width,
         ),
