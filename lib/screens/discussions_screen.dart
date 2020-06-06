@@ -116,7 +116,6 @@ class _DiscussionsScreenState extends State<DiscussionsScreen> {
     // TODO: implement dispose
     discussionListWidget.clear();
     _playerController.dispose();
-
     super.dispose();
   }
 
@@ -250,6 +249,7 @@ class _DiscussionsScreenState extends State<DiscussionsScreen> {
                     Text('Upload Class')
                   ],
                 ),
+
               ),
             ],
           ),
