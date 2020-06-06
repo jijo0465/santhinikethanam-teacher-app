@@ -197,8 +197,6 @@ class _DiscussionsScreenState extends State<DiscussionsScreen> {
                                 _playerController.seekTo(duration);
                               }),
                           FloatingActionButton(
-                            backgroundColor:
-                                Theme.of(context).primaryColor.withOpacity(0.7),
                             onPressed: () {
                               setState(() {
                                 _playerController.value.isPlaying
@@ -213,10 +211,7 @@ class _DiscussionsScreenState extends State<DiscussionsScreen> {
                             ),
                           ),
                           IconButton(
-                              icon: Icon(
-                                Icons.fast_forward,
-                                color: Colors.white,
-                              ),
+                              icon: Icon(Icons.fast_forward),
                               onPressed: () async {
                                 Duration duration = Duration(
                                     seconds: (await _playerController.position)
@@ -228,14 +223,14 @@ class _DiscussionsScreenState extends State<DiscussionsScreen> {
                       ),
                     ),
                     Align(
-                        alignment: Alignment.topRight,
+                        alignment: Alignment.bottomRight,
                         child: IconButton(
                             icon: Icon(
                               Icons.fullscreen,
-                              size: 30,
-                              color: Colors.white,
+                              size: 40,
+                              color: Colors.black,
                             ),
-                            onPressed: () {}))
+                            onPressed: null))
                   ],
                 ),
               ),
@@ -245,60 +240,11 @@ class _DiscussionsScreenState extends State<DiscussionsScreen> {
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     Container(
-                      child: uploading?new Center(child: new CircularProgressIndicator()) :IconButton(
+                      child: IconButton(
                           icon: Icon(CupertinoIcons.video_camera_solid),
                           onPressed: () async {
-                            file =
+                            File file =
                                 await FilePicker.getFile(type: FileType.video);
-                            print(file.path);
-                            showDialog(
-                              context: context,
-                              barrierDismissible: true,
-                              builder: (BuildContext context) {
-                                // return object of type Dialog
-                                return AlertDialog(
-                                  title: new Text("Share video to Classroom?"),
-                                  content: new Text("Class : 10 \nDate : <DATE>"),
-                                  actions: <Widget>[
-                                    // usually buttons at the bottom of the dialog
-                                    new FlatButton(
-                                      child: new Text("Close"),
-                                      onPressed: () {
-                                        Navigator.of(context).pop();
-                                      },
-                                    ),
-                                    FlatButton(
-                                      child: Text("Share"),
-                                      onPressed: () async {
-                                        setState(() {
-                                          uploading = true;
-                                        });
-                                        Navigator.of(context).pop();
-                                          StorageReference storageReference;
-                                          if (file!=null) {
-                                            storageReference =
-                                                FirebaseStorage.instance.ref().child("videos/${widget.grade}/${widget.date}/${widget.period}");
-                                          }
-                                          final StorageUploadTask uploadTask = storageReference.putFile(file);
-                                          final StorageTaskSnapshot downloadUrl = (await uploadTask.onComplete);
-                                          final String url = (await downloadUrl.ref.getDownloadURL());
-                                          print("URL is $url");
-                                          setState(() {
-                                            uploading = false;
-                                          });
-//                                        GET URL \/ \/ \/
-//                                        StorageReference ref =
-//                                        FirebaseStorage.instance.ref().child("videos/${widget.grade}/${widget.date}/${widget.period}");
-//                                        String url2 = (await ref.getDownloadURL()).toString();
-//                                        print(url2);
-                                      },
-                                    ),
-                                  ],
-                                );
-                              },
-                            );
-
-
                           }),
                     ),
                     Text('Upload Class')
@@ -311,9 +257,10 @@ class _DiscussionsScreenState extends State<DiscussionsScreen> {
 
         SizedBox(height: 5),
         Padding(
-          padding: const EdgeInsets.only(left:8),
+          padding: const EdgeInsets.only(left: 8),
           child: Text(
             'Discussions',
+            textAlign: TextAlign.left,
             style: TextStyle(
               color: Colors.black,
               fontSize: 16,
@@ -372,12 +319,7 @@ class _DiscussionsScreenState extends State<DiscussionsScreen> {
                 // },
               ),
             ),
-            IconButton(
-                icon: Icon(Icons.picture_as_pdf),
-                onPressed: () async {
-                  File file = await FilePicker.getFile(
-                      type: FileType.custom, allowedExtensions: ['pdf']);
-                }),
+            IconButton(icon: Icon(Icons.book), onPressed: () {}),
             Container(
                 height: 40,
                 width: 40,
@@ -390,7 +332,7 @@ class _DiscussionsScreenState extends State<DiscussionsScreen> {
                     _addToDiscussions(_textFieldController.text);
                     _textFieldController.clear();
                     setState(() {
-                      color = Colors.blue;
+                      color = Colors.grey;
                     });
                   },
                 ))
