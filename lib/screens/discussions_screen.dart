@@ -20,8 +20,11 @@ import 'package:chewie/chewie.dart';
 class DiscussionsScreen extends StatefulWidget {
   // final Grade grade = Grade();
   // final Student student;
+  final String date;
+  final String grade;
+  final int period;
 
-  const DiscussionsScreen({Key key}) : super(key: key);
+  const DiscussionsScreen({Key key, this.date, this.grade, this.period}) : super(key: key);
 
   @override
   _DiscussionsScreenState createState() => _DiscussionsScreenState();
@@ -103,7 +106,7 @@ class _DiscussionsScreenState extends State<DiscussionsScreen> {
     widgetIndex = 0;
     grade.setId(id);
     _playerController =
-    VideoPlayerController.network('http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4')
+    VideoPlayerController.asset('assets/videos/smartschool.mp4')
       ..initialize().then((_) {
         // Ensure the first frame is shown after the video is initialized, even before the play button has been pressed.
         setState(() {
