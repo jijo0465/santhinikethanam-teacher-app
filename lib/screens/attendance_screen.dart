@@ -72,12 +72,13 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
               ],
             ),
           ),
-          DigiCampusAppbar(
-            icon: Icons.close,
-            onDrawerTapped: () {
-              Navigator.of(context).pop();
-            },
-          ),
+//          DigiCampusAppbar(
+//            title: 'Check Attendance',
+//            icon: Icons.close,
+//            onDrawerTapped: () {
+//              Navigator.of(context).pop();
+//            },
+//          ),
           DigiAlert(title: 'Attendance',text: 'Subscribe for the complete digital school experience',icon: DigiIcons.school_alt)
         ],
       ),

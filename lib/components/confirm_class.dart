@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:teacher_app/components/select_class.dart';
 import 'package:teacher_app/components/select_division.dart';
+import 'package:teacher_app/screens/call.dart';
 
 class ConfirmClass extends StatefulWidget {
   ConfirmClass({Key key}) : super(key: key);
@@ -94,7 +95,8 @@ class _ConfirmClassState extends State<ConfirmClass> {
                     await Permission.microphone.request();
                     await Permission.storage.request();
                     await Permission.photos.request();
-                    Navigator.of(context).pushNamed('/call');
+                    if(grade>0)
+                    Navigator.of(context).push(MaterialPageRoute(builder:(context) => CallPage(id: grade)));
                   },
                   child: Text(
                     '  Enter  ',

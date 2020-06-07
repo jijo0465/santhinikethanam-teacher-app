@@ -165,8 +165,8 @@ class _ClassroomScreenState extends State<ClassroomScreen> {
                       child: Container(
                         decoration: BoxDecoration(
                             gradient: LinearGradient(colors: [
-                          Colors.greenAccent[100],
-                          Colors.greenAccent[400]
+                          Colors.blue[100].withOpacity(0.3),
+                          Colors.blue[400].withOpacity(0.3)
                         ])),
                         child: Row(
                             children: List.generate(timeTable['periods'].length, (index) {
@@ -180,11 +180,15 @@ class _ClassroomScreenState extends State<ClassroomScreen> {
                                     valueColor: AlwaysStoppedAnimation<Color>(
                                         Theme.of(context).primaryColor)));
                               else  {
+
                                 _items = snapshot.data.documents;
+                                if(_items.isNotEmpty)
                                 _items.forEach((element) {
                                   if(element.documentID == saveFormattedDate)
-                                    if(element.data.containsKey('url_period_${timeTable['periods'][index]['pdno']}'))
+
+                                    if(element['period_${timeTable['periods'][index]['pdno']}']!=null)
                                       {
+                                        print(element['period_${timeTable['periods'][index]['pdno']}']['videoUrl']);
                                         print('KEY --->> TRUE');
                                         isVideoUploaaded = true;
                                       }

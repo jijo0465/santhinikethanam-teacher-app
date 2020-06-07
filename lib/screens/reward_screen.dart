@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:teacher_app/components/digi_alert.dart';
 import 'package:teacher_app/components/digicampus_appbar.dart';
+import 'package:teacher_app/components/icons.dart';
 import 'package:teacher_app/components/rewards_card.dart';
 import 'package:teacher_app/components/select_class.dart';
 import 'package:teacher_app/components/select_division.dart';
@@ -153,6 +155,7 @@ class _RewardScreenState extends State<RewardScreen> {
                 Navigator.of(context).pop();
               },
             ),
+          DigiAlert(title: 'Give Rewards',text: 'Subscribe for the complete digital school experience',icon: DigiIcons.school_alt)
         ],
       ),
     );

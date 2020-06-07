@@ -18,7 +18,8 @@ import 'package:http/http.dart' as http;
 
 class CallPage extends StatefulWidget {
   // final String channelName;
-  const CallPage({Key key}) : super(key: key);
+  final int id;
+  const CallPage({Key key, this.id}) : super(key: key);
 
   @override
   _CallPageState createState() => _CallPageState();
@@ -41,7 +42,6 @@ class _CallPageState extends State<CallPage> with SingleTickerProviderStateMixin
   List<Map<String, dynamic>> _discussionData = [];
   List<int> participantId = [];
   Grade grade = Grade.empty();
-  int id = 7;
   int widgetIndex = 0;
   int broadcasterUid;
   String resourceId;
@@ -78,7 +78,7 @@ class _CallPageState extends State<CallPage> with SingleTickerProviderStateMixin
   @override
   void initState() {
     super.initState();
-    grade.setId(id);
+    grade.setId(widget.id);
     _animationController = AnimationController(
         vsync: this,
         duration: Duration(milliseconds: 900)
@@ -168,7 +168,7 @@ class _CallPageState extends State<CallPage> with SingleTickerProviderStateMixin
       firestore.collection('live').document('grade_${grade.id}')
           .setData({'liveBroadcastChannelId': uid},merge: true)
           .then((value) {
-        startRecording(uid);
+//        startRecording(uid);
         broadcasterUid = uid;
         setState(() {
           final info = 'onJoinChannel: $channel, uid: $uid';
@@ -505,7 +505,7 @@ class _CallPageState extends State<CallPage> with SingleTickerProviderStateMixin
   }
 
   void _onCallEnd(BuildContext context) {
-    stopRecording(broadcasterUid);
+//    stopRecording(broadcasterUid);
     if(record)
     _stopVideoRecording();
     firestore.collection('live').document('grade_${grade.id}')
@@ -947,32 +947,32 @@ class _CallPageState extends State<CallPage> with SingleTickerProviderStateMixin
       ),
     );
   }
-
-  Future<void> startRecording(int uid) async {
-    await Future.delayed(Duration(seconds: 80));
-    print("Starting Recording");
-    String url = 'http://192.168.0.12:8080/start_recording/$uid';
-    Map<String, String> headers = {"Content-type": "application/json"};
-    Map<String, String> params = {"uid": uid.toString()};
-    String data = jsonEncode(params);
-
-    http.get(url, headers: headers).then((response) {
-      // print(response.body);
-      // resourceId = json.decode(response.body)['resourceId'];
-      // sid = json.decode(response.body)['resourceId'];
-    }).catchError((error) => print(error));
-  }
-
-  Future<void> stopRecording(int uid) async {
-    print('Stopping Recording....');
-    String url = 'http://192.168.0.12:8080/stop_recording/$uid';
-    Map<String, String> headers = {"Content-type": "application/json"};
-    Map<String, dynamic> params = {"resourceId": "$resourceId", "sid": "$sid"};
-    String data = jsonEncode(params);
-    await http.get(url, headers: headers).then((response) {
-      print(response.body);
-    }).catchError((error) => print(error));
-  }
+//
+//  Future<void> startRecording(int uid) async {
+//    await Future.delayed(Duration(seconds: 80));
+//    print("Starting Recording");
+//    String url = 'http://192.168.0.12:8080/start_recording/$uid';
+//    Map<String, String> headers = {"Content-type": "application/json"};
+//    Map<String, String> params = {"uid": uid.toString()};
+//    String data = jsonEncode(params);
+//
+//    http.get(url, headers: headers).then((response) {
+//      // print(response.body);
+//      // resourceId = json.decode(response.body)['resourceId'];
+//      // sid = json.decode(response.body)['resourceId'];
+//    }).catchError((error) => print(error));
+//  }
+//
+//  Future<void> stopRecording(int uid) async {
+//    print('Stopping Recording....');
+//    String url = 'http://192.168.0.12:8080/stop_recording/$uid';
+//    Map<String, String> headers = {"Content-type": "application/json"};
+//    Map<String, dynamic> params = {"resourceId": "$resourceId", "sid": "$sid"};
+//    String data = jsonEncode(params);
+//    await http.get(url, headers: headers).then((response) {
+//      print(response.body);
+//    }).catchError((error) => print(error));
+//  }
 
   _startVideoRecording() async {
       bool start = await FlutterScreenRecording.startRecordScreen("${DateTime.now().day}_${DateTime.now().month}_${DateTime.now().year}");

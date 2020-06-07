@@ -16,13 +16,11 @@ class SelectClass extends StatelessWidget {
                                     value: 0,
                                   ),
                                   DropdownMenuItem(
-                                      child: Text('Class I'), value: 1),
+                                      child: Text('Class VIII'), value: 8),
                                   DropdownMenuItem(
-                                      child: Text('Class II'), value: 2),
+                                      child: Text('Class IX'), value: 9),
                                   DropdownMenuItem(
-                                      child: Text('Class III'), value: 3),
-                                  DropdownMenuItem(
-                                      child: Text('Class IV'), value: 4),
+                                      child: Text('Class X'), value: 10),
                                 ],
                                 onChanged: onchanged),
                           );

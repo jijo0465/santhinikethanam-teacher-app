@@ -97,14 +97,18 @@ class _DiscussionsScreenState extends State<DiscussionsScreen> {
   void initState() {
     // TODO: implement initState
     widgetIndex = 0;
+    uploaded = widget.uploadStatus;
 //    grade.setId(id);
+//    firestore.collection('grade_${widget.grade}').document('${widget.date}').setData(
+//        {'period _${widget.period}': {'pdno': '${widget.period}', 'videoUrl': url}},merge: true
     firestore.collection('grade_${widget.grade}').document('${widget.date}').get().then((value) {
+      String url = value['period_${'widget.period'}']['videoUrl'];
       if(value == null)
         print('Video Error');
       else
         {
           _playerController =
-          VideoPlayerController.network(value['url_period_${widget.period}'].toString())
+          VideoPlayerController.network(url)
             ..initialize().then((_) {
               // Ensure the first frame is shown after the video is initialized, even before the play button has been pressed.
               setState(() {
@@ -190,38 +194,37 @@ class _DiscussionsScreenState extends State<DiscussionsScreen> {
                           ? Center(
                   child: CircularProgressIndicator(
                   valueColor: AlwaysStoppedAnimation<Color>(
-                      Theme.of(context).primaryColor)))
-                          :Container(
+                      Colors.black)))
+                          : !uploaded
+                              ? Container()
+                          : Container(
                             color: Colors.black,
 //                      width: double.infinity,
 //                      height: isFullScree
 //                      n?double.infinity:MediaQuery.of(context).size.height*0.3,
-                            child: AspectRatio(
-                              aspectRatio: _playerController.value.aspectRatio,
-                              child: Stack(
-                                children: <Widget>[
-                                  Center(
-                                    child: _playerController.value.initialized
-                                        ? AspectRatio(
-                                      aspectRatio: _playerController.value.aspectRatio,
-                                      child: GestureDetector(
-                                        onTap: (){
-                                          setState(() {
-                                            showPlayerControls = !showPlayerControls;
-                                          });
-                                        },
-                                        child: Chewie(
+                            child: Stack(
+                              children: <Widget>[
+                                Center(
+                                  child: _playerController.value.initialized
+                                      ? AspectRatio(
+                                    aspectRatio: _playerController.value.aspectRatio,
+                                    child: GestureDetector(
+                                      onTap: (){
+                                        setState(() {
+                                          showPlayerControls = !showPlayerControls;
+                                        });
+                                      },
+                                      child: Chewie(
 
-                                          controller: _chewieController,
-                                        ),
+                                        controller: _chewieController,
                                       ),
-                                    )
-                                        : Container(),
-                                  ),
+                                    ),
+                                  )
+                                      : Container(),
+                                ),
 //                                !showPlayerControls?Container():
 //                                getPlayerControls(),
-                                ],
-                              ),
+                              ],
                             ),
                           ),
                         ),
@@ -488,17 +491,17 @@ class _DiscussionsScreenState extends State<DiscussionsScreen> {
         print('ITEM FETCHED : $item');
       }
     }
-      if(item != null && item.data.containsKey('discussion_period_${widget.period}')){
-        print(item['discussion_period_${widget.period}'].length);
-        for (; widgetIndex < item['discussion_period_${widget.period}'].length; widgetIndex++) {
+      if(item != null && item.data.containsKey('period_${widget.period}')){
+        if(item['period_${widget.period}']['discussion'] != null)
+        for (; widgetIndex < item['period_${widget.period}']['discussion'].length; widgetIndex++) {
           commentData.insert(widgetIndex, {
-            'comment': item['discussion_period_${widget
-                .period}'][widgetIndex]['comment'],
-            'date': item['discussion_period_${widget.period}'][widgetIndex]['date']
+            'comment': item['period_${widget
+                .period}']['discussion'][widgetIndex]['comment'],
+            'date': item['period_${widget.period}']['discussion'][widgetIndex]['date']
           });
 
-          print(item['discussion_period_${widget
-              .period}'][widgetIndex]['comment']);
+//          print(item['discussion_period_${widget
+//              .period}'][widgetIndex]['comment']);
           // print('itemval: ${item[0]['disussion'][widgetIndex]['comment']}');
           discussionListWidget.add(Column(children: <Widget>[
             Container(
@@ -519,8 +522,8 @@ class _DiscussionsScreenState extends State<DiscussionsScreen> {
                           image:
                           // AssetImage(''),
                           NetworkImage(
-                              item['discussion_period_${widget
-                                  .period}'][widgetIndex]['url']),
+                              item['period_${widget
+                                  .period}']['discussion'][widgetIndex]['url']),
                           fit: BoxFit.fill),
                     ),
                   ),
@@ -534,7 +537,7 @@ class _DiscussionsScreenState extends State<DiscussionsScreen> {
                             .width,
                         child: Align(
                           alignment: Alignment.centerLeft,
-                          child: Text(item['periods'][widgetIndex]['comment']),
+                          child: Text(item['period_${widget.period}']['discussion'][widgetIndex]['comment']),
                         ),
                       )),
                 ],
@@ -557,7 +560,7 @@ class _DiscussionsScreenState extends State<DiscussionsScreen> {
 //      'videoUrl': url,
 //    }];
       firestore.collection('grade_${widget.grade}').document('${widget.date}').setData(
-          {'period _${widget.period}': {'pdno': '${widget.period}', 'videoUrl': url}},merge: true
+          {'period_${widget.period}': {'pdno': '${widget.period}', 'videoUrl': url}},merge: true
       );
 //    var updateUrl ;
 //    print('UODATE DATABASE');
@@ -599,7 +602,7 @@ class _DiscussionsScreenState extends State<DiscussionsScreen> {
     var comment = {
         'comment': text,
         'date': DateTime.now().toUtc(),
-        'url': "https://indiadidac.org/wp-content/uploads/2018/05/teacher.jpg"
+        'url': "https://kynghistory.ky.gov/People/No-Image-Person%201.jpg"
       };
 //    if(value.documents.isEmpty)
       firestore.collection('grade_${widget.grade}').document('${widget.date}').setData(

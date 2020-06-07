@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:teacher_app/components/digi_alert.dart';
 import 'package:teacher_app/components/digicampus_appbar.dart';
+import 'package:teacher_app/components/icons.dart';
 import 'package:teacher_app/components/select_class.dart';
 import 'package:teacher_app/components/select_division.dart';
 import 'package:teacher_app/components/select_student.dart';
@@ -341,12 +343,13 @@ class _RemarkScreenState extends State<RemarkScreen> {
               )
             ]),
           ),
-          DigiCampusAppbar(
-            icon: Icons.close,
-            onDrawerTapped: () {
-              Navigator.of(context).pop();
-            },
-          ),
+//          DigiCampusAppbar(
+//            icon: Icons.close,
+//            onDrawerTapped: () {
+//              Navigator.of(context).pop();
+//            },
+//          ),
+          DigiAlert(title: 'Give Rewards',text: 'Subscribe for the complete digital school experience',icon: DigiIcons.school_alt)
         ],
       ),
     );

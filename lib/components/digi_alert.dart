@@ -67,6 +67,7 @@ class DigiAlert extends StatelessWidget {
           )
         ),
         DigiCampusAppbar(
+          title: title,
           icon: Icons.close,
           onDrawerTapped: () {
             Navigator.of(context).pop();
