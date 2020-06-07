@@ -1,6 +1,10 @@
+import 'dart:convert';
+
 import 'package:flutter/widgets.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:teacher_app/models/teacher.dart';
 import 'package:teacher_app/services/digi_auth.dart';
+import 'package:teacher_app/states/teacher_state.dart';
 
 enum Status { Uninitialized, Authenticated, Authenticating, Unauthenticated }
 
@@ -13,13 +17,27 @@ class LoginState with ChangeNotifier {
 
   Status get status => _status;
 
-  Future<bool> signIn(String teacherId, String password) async {
-      DigiAuth digiAuth = DigiAuth();
-      digiAuth.signIn(teacherId, password);
-//    _status = Status.Authenticated;
-//    notifyListeners();
-//    _prfs = await SharedPreferences.getInstance();
-//    _prfs.setBool('loggedIn',true);
+  Future<bool> signIn(String teacherId, String password, TeacherState teacherState) async {
+    _status = Status.Authenticating;
+    notifyListeners();
+    DigiAuth digiAuth = DigiAuth();
+    Teacher teacher = await digiAuth.signIn(teacherId, password);
+    if(teacher!=null){
+      print('student is not null');
+      teacherState.setTeacher(teacher);
+      _status = Status.Authenticated;
+      _prfs = await SharedPreferences.getInstance();
+      await _prfs.setBool('loggedIn',true);
+      await _prfs.setString('teacher', json.encode(teacher));
+      notifyListeners();
+    }else{
+      print('student is null');
+      _status = Status.Unauthenticated;
+      _prfs = await SharedPreferences.getInstance();
+      await _prfs.setBool('loggedIn',false);
+      notifyListeners();
+    }
+
     return true;
   }
 

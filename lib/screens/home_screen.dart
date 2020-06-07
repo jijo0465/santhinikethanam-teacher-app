@@ -24,24 +24,27 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     super.initState();
     drawerController = HiddenDrawerController(
       initialPage: HomePage(
-        title: 'main',
+        title: 'Santhinikethanam',
         onPressed: (){drawerController.open();},
       ),
       items: [
         DrawerItem(
           text: Text('Home', style: TextStyle(color: Colors.white)),
           icon: Icon(Icons.home, color: Colors.white),
+          onPressed: (){
+            drawerController.close();
+          },
         ),
         DrawerItem(
           text: Text(
             'SETTINGS',
-            style: TextStyle(color: Colors.white, fontFamily: "Poppins"),
+            style: TextStyle(color: Colors.grey, fontFamily: "Poppins"),
           ),
-          icon: Icon(Icons.settings, color: Colors.white),
-          onPressed: () async {
-            await Navigator.of(context).pushNamed('/settings');
-            drawerController.close();
-          },
+          icon: Icon(Icons.settings, color: Colors.grey),
+//          onPressed: () async {
+////            await Navigator.of(context).pushNamed('/settings');
+//            drawerController.close();
+//          },
         ),
       ],
     );
@@ -82,7 +85,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                               height: 6,
                             ),
                             Text(
-                              'Rachel green',
+                              'Hi Teacher',
                               style:
                                   TextStyle(color: Colors.white, fontSize: 20),
                             ),
@@ -404,7 +407,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 //                   ),
 //                 ),
 //               )
-              
+
 //             ],
 //           ),
 //           Positioned(top: 140, child: DigiPeriodCard()),
