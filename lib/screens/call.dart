@@ -40,7 +40,7 @@ class _CallPageState extends State<CallPage> with SingleTickerProviderStateMixin
   List<Map<String, dynamic>> _discussionData = [];
   List<int> participantId = [];
   Grade grade = Grade.empty();
-  int id = 8;
+  int id = 7;
   int widgetIndex = 0;
   int broadcasterUid;
   String resourceId;
@@ -711,11 +711,11 @@ class _CallPageState extends State<CallPage> with SingleTickerProviderStateMixin
                             for (int i = 0; i <
                                 snapshot.data.documents.length; i++) {
                               if (snapshot.data.documents[i].documentID ==
-                                  'user')
+                                  'grade_${grade.id}')
                                 _participantSnapshot =
                                 snapshot.data.documents[i];
                             }
-                            if (_participantSnapshot['users'] != null) {
+                            if (_participantSnapshot['liveBroadcastUserId']['users'] != null) {
                               _boxSizeHeight = 104.0 *
                                   (_participantSnapshot['users'].length / 5)
                                       .ceil();
