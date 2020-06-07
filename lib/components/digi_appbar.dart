@@ -63,7 +63,7 @@ class DigiAppbar extends StatelessWidget {
                                 Widget child) {
                               return Text(
                                 // 'Hi ${value.teacherName} !',
-                                'Hi Rachel !',
+                                'Hi Teacher!',
                                 style: TextStyle(
                                     fontSize: 20, color: Colors.white),
                               );

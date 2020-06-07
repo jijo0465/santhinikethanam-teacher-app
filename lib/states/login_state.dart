@@ -28,7 +28,7 @@ class LoginState with ChangeNotifier {
       _status = Status.Authenticated;
       _prfs = await SharedPreferences.getInstance();
       await _prfs.setBool('loggedIn',true);
-      await _prfs.setString('teacher', json.encode(teacher));
+//      await _prfs.setString('teacher', json.encode(teacher));
       notifyListeners();
     }else{
       print('teacher is null');

@@ -6,6 +6,7 @@ import 'dart:ui';
 import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:diagonal_scrollview/diagonal_scrollview.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screen_recording/flutter_screen_recording.dart';
 import 'package:flutter/material.dart';
@@ -350,14 +351,28 @@ class _CallPageState extends State<CallPage> with SingleTickerProviderStateMixin
 //          ),
           Flexible(
             flex: 2,
-            child: RaisedButton(
-                shape: CircleBorder(side: BorderSide(color: Colors.white30)),
+            child: Container(
+              child: IconButton(
+                padding: EdgeInsets.all(16),
+                onPressed: () {
+                  _onCallEnd(context);
+//                  Navigator.of(context).pop();
+                },
+//                  backgroundColor: Colors.white30,
+                icon: Icon(Icons.add_to_home_screen,color: Colors.white,size: 30,),
+              ),
+            ),
+          ),
+          Flexible(
+            flex: 2,
+            child: IconButton(
+//                shape: CircleBorder(side: BorderSide(color: Colors.white30)),
                 color: Theme
                     .of(context)
                     .primaryColor
                     .withOpacity(0.6),
                 onPressed: onCheckParticipants ? null : _onToggleMute,
-                child: Icon(
+                icon: Icon(
                   muted ? Icons.mic_off : Icons.mic,
                   color: muted ? Colors.red : Colors.white70,
                   size: 40,
@@ -365,9 +380,10 @@ class _CallPageState extends State<CallPage> with SingleTickerProviderStateMixin
           ),
           Flexible(
             flex: 3,
-            child: RaisedButton(
-              shape: CircleBorder(side: BorderSide(color: Colors.white30)),
-              color: Colors.black54,
+            child: FloatingActionButton(
+
+//              shape: CircleBorder(side: BorderSide(color: Colors.white30)),
+              backgroundColor: Colors.transparent,
               onPressed: onCheckParticipants ? null : ()
 //              => _onCallEnd(context),
               {
@@ -378,25 +394,26 @@ class _CallPageState extends State<CallPage> with SingleTickerProviderStateMixin
                     : _stopVideoRecording();
               },
               child: Icon(
-                Icons.fiber_manual_record,
+                CupertinoIcons.circle_filled,
+                size: 60,
                 color: record ? Colors.redAccent : Theme
                     .of(context)
                     .primaryColor
                     .withOpacity(0.6),
-                size: 80.0,
+//                size: 60.0,
               ),
             ),
           ),
           Flexible(
             flex: 2,
-            child: RaisedButton(
-                shape: CircleBorder(side: BorderSide(color: Colors.white30)),
+            child: IconButton(
+//                shape: CircleBorder(side: BorderSide(color: Colors.white30)),
                 color: Theme
                     .of(context)
                     .primaryColor
                     .withOpacity(0.6),
                 onPressed: onCheckParticipants ? null : _onSwitchCamera,
-                child: Icon(
+                icon: Icon(
                   Icons.switch_camera,
                   color: Colors.white70,
                   size: 40.0,
@@ -404,8 +421,8 @@ class _CallPageState extends State<CallPage> with SingleTickerProviderStateMixin
           ),
           Flexible(
             flex: 2,
-            child: RaisedButton(
-                shape: CircleBorder(side: BorderSide(color: Colors.white30)),
+            child: IconButton(
+//                shape: CircleBorder(side: BorderSide(color: Colors.white30)),
                 color: Theme
                     .of(context)
                     .primaryColor
@@ -422,7 +439,7 @@ class _CallPageState extends State<CallPage> with SingleTickerProviderStateMixin
                       });
                     });
                 },
-                child: Icon(
+                icon: Icon(
                   Icons.group,
                   color: Colors.white70,
                   size: 40.0,
@@ -627,165 +644,184 @@ class _CallPageState extends State<CallPage> with SingleTickerProviderStateMixin
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-      body: Center(
-        child: Stack(
-          children: <Widget>[
-            // _viewRows(),
-            _viewVideo(),
-            _panel(),
-            FadeTransition(
-                opacity: _animation,
-                child: _toolbar()),
-            AnimatedContainer(
-              duration: Duration(milliseconds: 900),
-              height: onShowToolbar ? 110 - MediaQuery
-                  .of(context)
-                  .padding
-                  .top : 0,
-              curve: Curves.easeIn,
-              child: DigiCampusAppbar(
-                icon: Icons.close,
-                onDrawerTapped: () {
-                  _onCallEnd(context);
-//                  Navigator.of(context).pop();
-                },
+      body: WillPopScope(
+        onWillPop: (){
+          _onCallEnd(context);
+          return Future.value(true);
+        },
+        child: Center(
+          child: Stack(
+            children: <Widget>[
+              // _viewRows(),
+              _viewVideo(),
+              _panel(),
+              FadeTransition(
+                  opacity: _animation,
+                  child: _toolbar()),
+//            Positioned(
+//              top: MediaQuery.of(context).padding.top,
+//              child: Container(
+//                child: IconButton(
+//                  padding: EdgeInsets.all(16),
+//                  onPressed: () {
+//                    _onCallEnd(context);
+//                    Navigator.of(context).pop();
+//                  },
+////                  backgroundColor: Colors.white30,
+//                  icon: Icon(Icons.add_to_home_screen,color: Colors.red,size: 28,),
+//                ),
+//              ),
+//            ),
+//            AnimatedContainer(
+//              duration: Duration(milliseconds: 900),
+//              height: onShowToolbar ? 110 - MediaQuery
+//                  .of(context)
+//                  .padding
+//                  .top : 0,
+//              curve: Curves.easeIn,
+//              child: DigiCampusAppbar(
+//                icon: Icons.close,
+//                onDrawerTapped: () {
+//                  _onCallEnd(context);
+////                  Navigator.of(context).pop();
+//                },
+//              ),
+//            ),
+              onShowToolbar ? Container()
+                  : Container(
+                child: GestureDetector(
+                    onTap: () {
+                      _animationController.reverse();
+                      setState(() {
+                        onShowToolbar = true;
+                      });
+                      Future.delayed(Duration(seconds: 10)).then((value) {
+                        if (!onCheckParticipants) {
+                          _animationController.forward();
+                          setState(() {
+                            onShowToolbar = false;
+                          });
+                        }
+                      });
+                    },
+                    behavior: HitTestBehavior.translucent,
+                    child: Align(
+                      alignment: Alignment.center,
+                      child: Container(
+                        height: MediaQuery
+                            .of(context)
+                            .size
+                            .height,
+                        width: MediaQuery
+                            .of(context)
+                            .size
+                            .width,
+                      ),
+                    )
+                ),
               ),
-            ),
-            onShowToolbar ? Container()
-                : Container(
-              child: GestureDetector(
-                  onTap: () {
-                    _animationController.reverse();
-                    setState(() {
-                      onShowToolbar = true;
-                    });
-                    Future.delayed(Duration(seconds: 10)).then((value) {
-                      if (!onCheckParticipants) {
-                        _animationController.forward();
-                        setState(() {
-                          onShowToolbar = false;
-                        });
-                      }
-                    });
-                  },
-                  behavior: HitTestBehavior.translucent,
-                  child: Align(
-                    alignment: Alignment.center,
-                    child: Container(
-                      height: MediaQuery
-                          .of(context)
-                          .size
-                          .height,
-                      width: MediaQuery
-                          .of(context)
-                          .size
-                          .width,
-                    ),
-                  )
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Center(
-                child: ClipRect(
-                  child: BackdropFilter(
-                    filter: ImageFilter.blur(
-                        sigmaX: onCheckParticipants ? 25 : 0,
-                        sigmaY: onCheckParticipants ? 25 : 0),
-                    child: onCheckParticipants
-                        ? StreamBuilder<QuerySnapshot>(
-                        stream: firestore.collection('live').snapshots(),
-                        builder: (BuildContext context, AsyncSnapshot<
-                            QuerySnapshot> snapshot) {
-                          if (!snapshot.hasData) {
-                            return Center(
-                              child: CircularProgressIndicator(
-                                valueColor: AlwaysStoppedAnimation<Color>(
-                                    Theme
-                                        .of(context)
-                                        .primaryColor),
-                              ),
-                            );
-                          }
-                          else {
-                            for (int i = 0; i <
-                                snapshot.data.documents.length; i++) {
-                              if (snapshot.data.documents[i].documentID ==
-                                  'grade_${grade.id}')
-                                _participantSnapshot =
-                                snapshot.data.documents[i];
-                            }
-                            if (_participantSnapshot['liveBroadcastUserId']['users'] != null) {
-                              _boxSizeHeight = 104.0 *
-                                  (_participantSnapshot['users'].length / 5)
-                                      .ceil();
-                              return Container(
-                                  width: MediaQuery
-                                      .of(context)
-                                      .size
-                                      .width - 40,
-                                  height: MediaQuery
-                                      .of(context)
-                                      .size
-                                      .height * 0.6,
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(12),
-                                    color: Colors.black
-                                        .withOpacity(
-                                        onCheckParticipants ? 0.4 : 0.0),
-                                  ),
-                                  child:
-                                  DiagonalScrollView(
-                                      enableFling: true,
-                                      enableZoom: true,
-                                      flingVelocityReduction: 0.3,
-                                      minScale: _minScale,
-                                      maxScale: _maxScale,
-                                      maxHeight: _boxSizeHeight,
-                                      maxWidth: _boxSizeWidth,
-                                      onCreated: (
-                                          DiagonalScrollViewController controller) {
-                                        _controller = controller;
-                                      },
-                                      child:
-                                      Container(
-                                        height: _boxSizeHeight,
-                                        width: _boxSizeWidth,
-                                        child: Stack(
-                                          children: _getChildren(
-                                              _participantSnapshot),
-                                        ),
-                                      )
-                                  )
+              Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Center(
+                  child: ClipRect(
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(
+                          sigmaX: onCheckParticipants ? 25 : 0,
+                          sigmaY: onCheckParticipants ? 25 : 0),
+                      child: onCheckParticipants
+                          ? StreamBuilder<QuerySnapshot>(
+                          stream: firestore.collection('live').snapshots(),
+                          builder: (BuildContext context, AsyncSnapshot<
+                              QuerySnapshot> snapshot) {
+                            if (!snapshot.hasData) {
+                              return Center(
+                                child: CircularProgressIndicator(
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                      Theme
+                                          .of(context)
+                                          .primaryColor),
+                                ),
                               );
                             }
                             else {
-                              return Container(
-                                  width: MediaQuery
-                                      .of(context)
-                                      .size
-                                      .width - 40,
-                                  height: MediaQuery
-                                      .of(context)
-                                      .size
-                                      .height * 0.6,
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(12),
-                                    color: Colors.black
-                                        .withOpacity(
-                                        onCheckParticipants ? 0.4 : 0.0),
-                                  ),
-                                  child:
-                                  Center(
-                                    child: Text('Students yet to join!',
-                                        textAlign: TextAlign.center,
-                                        style: TextStyle(
-                                            color: Colors.white, fontSize: 18)),
-                                  ));
+                              for (int i = 0; i <
+                                  snapshot.data.documents.length; i++) {
+                                if (snapshot.data.documents[i].documentID ==
+                                    'grade_${grade.id}')
+                                  _participantSnapshot =
+                                  snapshot.data.documents[i];
+                              }
+                              if (_participantSnapshot['liveBroadcastUserId']['users'] != null) {
+                                _boxSizeHeight = 104.0 *
+                                    (_participantSnapshot['users'].length / 5)
+                                        .ceil();
+                                return Container(
+                                    width: MediaQuery
+                                        .of(context)
+                                        .size
+                                        .width - 40,
+                                    height: MediaQuery
+                                        .of(context)
+                                        .size
+                                        .height * 0.6,
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(12),
+                                      color: Colors.black
+                                          .withOpacity(
+                                          onCheckParticipants ? 0.4 : 0.0),
+                                    ),
+                                    child:
+                                    DiagonalScrollView(
+                                        enableFling: true,
+                                        enableZoom: true,
+                                        flingVelocityReduction: 0.3,
+                                        minScale: _minScale,
+                                        maxScale: _maxScale,
+                                        maxHeight: _boxSizeHeight,
+                                        maxWidth: _boxSizeWidth,
+                                        onCreated: (
+                                            DiagonalScrollViewController controller) {
+                                          _controller = controller;
+                                        },
+                                        child:
+                                        Container(
+                                          height: _boxSizeHeight,
+                                          width: _boxSizeWidth,
+                                          child: Stack(
+                                            children: _getChildren(
+                                                _participantSnapshot),
+                                          ),
+                                        )
+                                    )
+                                );
+                              }
+                              else {
+                                return Container(
+                                    width: MediaQuery
+                                        .of(context)
+                                        .size
+                                        .width - 40,
+                                    height: MediaQuery
+                                        .of(context)
+                                        .size
+                                        .height * 0.6,
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(12),
+                                      color: Colors.black
+                                          .withOpacity(
+                                          onCheckParticipants ? 0.4 : 0.0),
+                                    ),
+                                    child:
+                                    Center(
+                                      child: Text('Students yet to join!',
+                                          textAlign: TextAlign.center,
+                                          style: TextStyle(
+                                              color: Colors.white, fontSize: 18)),
+                                    ));
+                              }
                             }
                           }
-                        }
-                    )
+                      )
 //                        : onShowDiscussions
 //                        ? Container(
 //                            width: MediaQuery.of(context).size.width - 40,
@@ -898,14 +934,15 @@ class _CallPageState extends State<CallPage> with SingleTickerProviderStateMixin
 //                              ],
 //                            ),
 //                        )
-                        : Container(),
+                          : Container(),
+                    ),
                   ),
                 ),
-              ),
-            )
-            //   }
-            // })
-          ],
+              )
+              //   }
+              // })
+            ],
+          ),
         ),
       ),
     );
