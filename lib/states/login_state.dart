@@ -23,7 +23,7 @@ class LoginState with ChangeNotifier {
     DigiAuth digiAuth = DigiAuth();
     Teacher teacher = await digiAuth.signIn(teacherId, password);
     if(teacher!=null){
-      print('student is not null');
+      print('Teacher is not null');
       teacherState.setTeacher(teacher);
       _status = Status.Authenticated;
       _prfs = await SharedPreferences.getInstance();
@@ -31,7 +31,7 @@ class LoginState with ChangeNotifier {
       await _prfs.setString('teacher', json.encode(teacher));
       notifyListeners();
     }else{
-      print('student is null');
+      print('teacher is null');
       _status = Status.Unauthenticated;
       _prfs = await SharedPreferences.getInstance();
       await _prfs.setBool('loggedIn',false);
