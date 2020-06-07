@@ -9,6 +9,7 @@ import 'package:diagonal_scrollview/diagonal_scrollview.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screen_recording/flutter_screen_recording.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:teacher_app/components/digicampus_appbar.dart';
 import 'package:teacher_app/components/live_stream_settings.dart';
 import 'package:teacher_app/models/grade.dart';
@@ -39,7 +40,7 @@ class _CallPageState extends State<CallPage> with SingleTickerProviderStateMixin
   List<Map<String, dynamic>> _discussionData = [];
   List<int> participantId = [];
   Grade grade = Grade.empty();
-  int id = 4001;
+  int id = 8;
   int widgetIndex = 0;
   int broadcasterUid;
   String resourceId;
@@ -54,12 +55,12 @@ class _CallPageState extends State<CallPage> with SingleTickerProviderStateMixin
 //  ValueNotifier<bool> onShowToolbar = ValueNotifier(true);
 //  ValueNotifier<bool> onCheckParticipants = ValueNotifier(false);
   bool onShowToolbar = true;
-
 //  bool onShowDiscussions = false;
   bool onCheckParticipants = false;
   bool muted = false;
   bool record = false;
   Color discussionFieldColor = Colors.grey;
+  String date = DateFormat('dd-MM-yyyy').format(DateTime.now());
 
   @override
   void dispose() {
@@ -162,9 +163,9 @@ class _CallPageState extends State<CallPage> with SingleTickerProviderStateMixin
     AgoraRtcEngine.onJoinChannelSuccess = (String channel,
         int uid,
         int elapsed,) {
-      firestore.collection('live').document('user').setData({'users': null});
-      firestore.collection('live').document('broadcast')
-          .setData({'uid': uid})
+      firestore.collection('grade_${grade.id}').document('$date').setData({'broadcaster_period_1': {'users': null}});
+      firestore.collection('grade_${grade.id}').document('$date')
+          .setData({'user_period_1': {'uid': uid}})
           .then((value) {
         startRecording(uid);
         broadcasterUid = uid;

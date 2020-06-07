@@ -170,7 +170,7 @@ class _ClassroomScreenState extends State<ClassroomScreen> {
                         ])),
                         child: Row(
                             children: List.generate(timeTable['periods'].length, (index) {
-                          // print(timeTable['$index'].toString());
+                          isVideoUploaaded = false;
                           return StreamBuilder<QuerySnapshot>(
                             stream: firestore.collection('grade_${timeTable['periods'][index]['class']}').snapshots(),
                             builder: (context, snapshot) {
@@ -196,7 +196,7 @@ class _ClassroomScreenState extends State<ClassroomScreen> {
                                         behavior: HitTestBehavior.translucent,
                                         onTap: (){
                                           Navigator.of(context).push(MaterialPageRoute(builder: (context) =>
-                                              DiscussionsScreen(date: saveFormattedDate, grade: timeTable['periods'][index]['class'],period: timeTable['periods'][index]['pdno'])));
+                                              DiscussionsScreen(date: saveFormattedDate, grade: timeTable['periods'][index]['class'], period: timeTable['periods'][index]['pdno'], uploadStatus: isVideoUploaaded)));
                                           print(hrs);
 //                                  hrs == (9+index) && i == 0
 //                                  ? Navigator.of(context).pushNamed('/live')
@@ -296,8 +296,8 @@ class _ClassroomScreenState extends State<ClassroomScreen> {
 //                })
                 children: [
                   Text('10:00'), SizedBox(width: 65),
-                  Text('10:30'), SizedBox(width: 65),
-                  Text('10:00'), SizedBox(width: 65),
+                  Text('10:45'), SizedBox(width: 65),
+                  Text('11:30'), SizedBox(width: 65),
                   Text('12:00'), SizedBox(width: 65)
                 ],
                 )),

@@ -23,8 +23,9 @@ class DiscussionsScreen extends StatefulWidget {
   final String date;
   final String grade;
   final int period;
+  final bool uploadStatus;
 
-  const DiscussionsScreen({Key key, this.date, this.grade, this.period}) : super(key: key);
+  const DiscussionsScreen({Key key, this.date, this.grade, this.period, this.uploadStatus}) : super(key: key);
 
   @override
   _DiscussionsScreenState createState() => _DiscussionsScreenState();
@@ -54,6 +55,7 @@ class _DiscussionsScreenState extends State<DiscussionsScreen> {
   bool uploading = false;
   bool uploaded = false;
   bool isFullScreen = false;
+  bool loading = true;
    ChewieController _chewieController;
 
   // Future getImage() async {
@@ -96,54 +98,56 @@ class _DiscussionsScreenState extends State<DiscussionsScreen> {
 
   @override
   void initState() {
-
-    Future.delayed(Duration(seconds: 3)).then((value){
-//      setState(() {
-//        showPlayerControls = false;
-//      });
-    });
-
+    uploaded = widget.uploadStatus;
     // TODO: implement initState
     widgetIndex = 0;
 //    grade.setId(id);
-    _playerController =
-    VideoPlayerController.asset('assets/videos/smartschool.mp4')
-      ..initialize().then((_) {
-        // Ensure the first frame is shown after the video is initialized, even before the play button has been pressed.
-        setState(() {
-          _playerController.play();
-        });
-      });
-     _chewieController = ChewieController(
-       allowedScreenSleep: false,
-       allowFullScreen: true,
-       fullScreenByDefault: false,
-       deviceOrientationsAfterFullScreen: [
-         DeviceOrientation.landscapeRight,
-         DeviceOrientation.landscapeLeft,
-         DeviceOrientation.portraitUp,
-         DeviceOrientation.portraitDown,
-       ],
-       videoPlayerController: _playerController,
-       autoInitialize: false,
-       autoPlay: false,
-       showControls: true,
+    firestore.collection('grade_${widget.grade}').document('${widget.date}').get().then((value) {
+      if(value == null)
+        print('Video Error');
+      else
+        {
+          _playerController =
+          VideoPlayerController.network(value['url_period_${widget.period}'].toString())
+            ..initialize().then((_) {
+              // Ensure the first frame is shown after the video is initialized, even before the play button has been pressed.
+              setState(() {
+                _playerController.play();
+              });
+            });
+          _chewieController = ChewieController(
+            allowedScreenSleep: false,
+            allowFullScreen: true,
+            fullScreenByDefault: false,
+            deviceOrientationsAfterFullScreen: [
+              DeviceOrientation.landscapeRight,
+              DeviceOrientation.landscapeLeft,
+              DeviceOrientation.portraitUp,
+              DeviceOrientation.portraitDown,
+            ],
+            videoPlayerController: _playerController,
+            autoInitialize: false,
+            autoPlay: false,
+            showControls: true,
 //       customControls: getPlayerControls()
-     );
-     _chewieController.addListener(() {
-       if (_chewieController.isFullScreen) {
-         SystemChrome.setPreferredOrientations([
-           DeviceOrientation.landscapeRight,
-           DeviceOrientation.landscapeLeft,
-         ]);
-       }
-     });
-
-    _playerController.addListener(() async {
-      await Future.delayed(Duration(seconds: 1));
-      playtime.value = await _playerController.position;
+          );
+          _chewieController.addListener(() {
+            if (_chewieController.isFullScreen) {
+              SystemChrome.setPreferredOrientations([
+                DeviceOrientation.landscapeRight,
+                DeviceOrientation.landscapeLeft,
+              ]);
+            }
+          });
+          _playerController.addListener(() async {
+            await Future.delayed(Duration(seconds: 1));
+            playtime.value = await _playerController.position;
+          });
+          setState(() {
+            loading = false;
+          });
+        }
     });
-
     super.initState();
   }
 
@@ -186,7 +190,12 @@ class _DiscussionsScreenState extends State<DiscussionsScreen> {
 //                            showPlayerControls = !showPlayerControls;
 //                          });
                           },
-                          child: Container(
+                          child: loading
+                          ? Center(
+                  child: CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                      Theme.of(context).primaryColor)))
+                          :Container(
                             color: Colors.black,
 //                      width: double.infinity,
 //                      height: isFullScree
@@ -242,7 +251,7 @@ class _DiscussionsScreenState extends State<DiscussionsScreen> {
                                   :Container(
                                 child: IconButton(
                                     icon: Icon(CupertinoIcons.video_camera_solid),
-                                    onPressed: uploaded ?null :() async {
+                                    onPressed: () async {
                                       File file =
                                       await FilePicker.getFile(type: FileType.video);
                                       print(file.path);
@@ -557,7 +566,7 @@ class _DiscussionsScreenState extends State<DiscussionsScreen> {
       if(value.documents.isEmpty)
         firestore.runTransaction((transaction) async {
           await transaction.set(
-              documentReference, {'url_period_${widget.period}': url});
+              documentReference, {'period_${widget.period}': url});
           print('---- >>>SET');
         });
       else
