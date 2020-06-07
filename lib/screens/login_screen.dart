@@ -90,6 +90,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       width: MediaQuery.of(context).size.width*0.75,
                       alignment: Alignment.centerRight,
                       child: FlatButton(
+                        onPressed: null,
                           padding: EdgeInsets.all(0),
 //                        onPressed: () {
 //                          Navigator.of(context).pushNamed('/forgot_password');

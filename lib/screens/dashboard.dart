@@ -1,8 +1,5 @@
-import 'dart:math';
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:teacher_app/components/confirm_class.dart';
 import 'package:teacher_app/components/digi_drawer.dart';
 import 'package:teacher_app/components/page_header.dart';
@@ -69,41 +66,45 @@ class _HomePageState extends State<HomePage> {
                                       Row(
                                         children: [
                                           SizedBox(
-                                            width: 15,
+                                            width: 4,
                                           ),
-                                          DigiMenuCard(
-                                            height: MediaQuery.of(context)
-                                                    .size
-                                                    .height *
-                                                0.17,
-                                            width: MediaQuery.of(context)
-                                                    .size
-                                                    .width *
-                                                0.61,
-                                            onPressed: () {
-                                              setState(() {
-                                                val = !val;
-                                              });
-                                            },
-                                            imagePath:
-                                                'assets/images/classroom.png',
+                                          Expanded(
+                                            flex: 1,
+                                            child: ClipRRect(
+                                              borderRadius: BorderRadius.circular(18),
+                                              child: DigiMenuCard(
+                                                height: MediaQuery.of(context)
+                                                        .size
+                                                        .height *
+                                                    0.15,
+                                                onPressed: () {
+                                                  setState(() {
+                                                    val = !val;
+                                                  });
+                                                },
+                                                imagePath:
+                                                    'assets/images/classroom.png',
+                                              ),
+                                            ),
                                           ),
-                                          SizedBox(width: 15),
-                                          DigiMenuCard(
-                                            height: MediaQuery.of(context)
-                                                    .size
-                                                    .height *
-                                                0.17,
-                                            width: MediaQuery.of(context)
-                                                    .size
-                                                    .width *
-                                                0.26,
-                                            onPressed: () {
-                                              Navigator.of(context).pushNamed(
-                                                  '/classroom_screen');
-                                            },
-                                            imagePath:
-                                                'assets/images/classroom.png',
+                                          SizedBox(width: 8),
+                                          Expanded(
+                                            flex: 1,
+                                            child: ClipRRect(
+                                              borderRadius: BorderRadius.circular(18),
+                                              child: DigiMenuCard(
+                                                height: MediaQuery.of(context)
+                                                        .size
+                                                        .height *
+                                                    0.15,
+                                                onPressed: () {
+                                                  Navigator.of(context).pushNamed(
+                                                      '/classroom_screen');
+                                                },
+                                                imagePath:
+                                                    'assets/images/virtual.png',
+                                              ),
+                                            ),
                                           )
                                         ],
                                       ),

@@ -1,10 +1,14 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:teacher_app/models/teacher.dart';
 import 'package:teacher_app/screens/home_screen.dart';
 import 'package:teacher_app/screens/loading_screen.dart';
 import 'package:teacher_app/screens/login_screen.dart';
 import 'package:teacher_app/states/login_state.dart';
+import 'package:teacher_app/states/teacher_state.dart';
 
 class Redirect extends StatefulWidget {
   const Redirect({Key key}) : super(key: key);
@@ -23,15 +27,20 @@ class _RedirectState extends State<Redirect> {
 
   @override
   Widget build(BuildContext context) {
+    TeacherState teacherState = Provider.of<TeacherState>(context, listen: false);
     return Consumer<LoginState>(
         builder: (BuildContext context, LoginState value, Widget child) {
       if (_loginStatus!=null && value.status==Status.Uninitialized) {
-        SharedPreferences.getInstance().then((prefs) {
+        SharedPreferences.getInstance().then((prefs) async {
           _loginStatus = prefs.getBool('loggedIn');
           if (_loginStatus == true) {
+//            String st = (await SharedPreferences.getInstance()).getString('parent');
+//            Map teacherMap = json.decode(st);
+//            Teacher teacher = Teacher.fromMap(teacherMap);
+//            teacherState.setTeacher(teacher);
             value.setStatus(Status.Authenticated);
           }else{
-            value.setStatus(Status.Authenticated);
+            value.setStatus(Status.Unauthenticated);
           }
         });
       }

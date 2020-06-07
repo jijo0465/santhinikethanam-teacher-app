@@ -3,7 +3,6 @@ import 'package:teacher_app/models/student.dart';
 import 'package:teacher_app/models/teacher.dart';
 
 class TeacherState with ChangeNotifier {
-  List<Teacher> _students=List();
   Teacher _teacher;
 
 
@@ -22,10 +21,5 @@ class TeacherState with ChangeNotifier {
     notifyListeners();
   }
 
-  setAllStudents(List<Teacher> students) async {
-    this._students = students;
-    this._teacher = students.first;
-    // this.setStudent(students.first);
-    notifyListeners();
-  }
+
 }
