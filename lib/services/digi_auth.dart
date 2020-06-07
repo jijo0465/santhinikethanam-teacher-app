@@ -14,16 +14,17 @@ class DigiAuth{
     Map<String, String> headers = {"Content-type": "application/json"};
     Map<String, dynamic> params = {"loginId":parentId,"password":password,"userType":"STUDENT"};
     String data = jsonEncode(params);
-    print(jsonEncode(params));
     Teacher teacher;
-    await http.post(url, headers: headers, body: data).then((response) {
+    await http.post(url, headers: headers, body: data).then((response) async {
 
       if (response.body != null) {
         final Map body = json.decode(response.body);
         print(body);
-//        if(body['response']=='ok'){
-
         teacher = Teacher.fromMap(body);
+        await http.get('http://192.168.0.31:8080/getTeacherTimeTable/${teacher.id}',headers: headers).then((response){
+//          final List<Map> body = json.decode(response.body);
+          print(response.body[0]);
+        });
 //        }
       }
     }).catchError((error) => print(error));
