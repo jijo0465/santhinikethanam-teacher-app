@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:teacher_app/components/digicampus_appbar.dart';
@@ -14,6 +15,9 @@ class ClassroomScreen extends StatefulWidget {
 
 class _ClassroomScreenState extends State<ClassroomScreen> {
   ScrollController _scrollController = new ScrollController();
+  var launchDate = DateTime(2020,06,01);
+  Firestore firestore = Firestore.instance;
+  List<DocumentSnapshot> _items;
   // ScrollController _controller2;
   // double iconOffset;
   // double offset;
@@ -50,6 +54,7 @@ class _ClassroomScreenState extends State<ClassroomScreen> {
   }
 
   Widget dateTiles(int i) {
+    print('DATETILES');
     DateFormat _dateFormat = DateFormat.yMMMd();
     DateFormat _dateFormatDay = DateFormat.E();
 //    DateFormat _dateFormatSave = DateFormat.yMd();
@@ -60,33 +65,39 @@ class _ClassroomScreenState extends State<ClassroomScreen> {
     String formattedDay = _dateFormatDay.format(date);
     String formattedDate = _dateFormat.format(date);
     String saveFormattedDate = DateFormat('dd-MM-yyyy').format(date);
+    bool isVideoUploaaded= false;
 
     List<Map<String, dynamic>> timeTableList = [
-     {
-       '0': 'Period 1\nClass 6',
-       '1': 'Period 2\nClass 7',
-       '2': 'Period 2\nClass 7',
-     },
-     {
-       '0': 'Period 3\nClass 6',
-       '1': 'Period 1\nClass 7',
-       '2': 'Period 3\nClass 7',
-     },
-     {
-      '0': 'Period 2\nClass 6',
-      '1': 'Period 1\nClass 8',
-      '2': 'Period 3\nClass 7',
-     },
-     {
-      '0': 'Period 1\nClass 6',
-      '1': 'Period 2\nClass 7',
-      '2': 'Period 2\nClass 7',
-     },
-     {
-       '0': 'Period 2\nClass 7',
-       '1': 'Period 1\nClass 8',
-       '2': 'Period 3\nClass 8',
-     },
+      {
+        'day': 'Monday',
+        'periods': [{'pdno': 1, 'class': '7', 'startTime': '10:00', 'endTime': '10:30'},
+          {'pdno': 2, 'class': '8', 'startTime': '10:45', 'endTime': '11:15'},
+          {'pdno': 3, 'class': '7', 'startTime': '11:30', 'endTime': '12:00'}],
+      },
+      {
+        'day': 'Tuesday',
+        'periods': [{'pdno': 1, 'class': '7', 'startTime': '10:00', 'endTime': '10:30'},
+          {'pdno': 2, 'class': '8', 'startTime': '10:45', 'endTime': '11:15'},
+          {'pdno': 3, 'class': '9', 'startTime': '11:30', 'endTime': '12:00'}],
+      },
+      {
+        'day': 'Wednesday',
+        'periods': [{'pdno': 1, 'class': '8', 'startTime': '10:00', 'endTime': '10:30'},
+          {'pdno': 2, 'class': '7', 'startTime': '10:45', 'endTime': '11:15'},
+          {'pdno': 3, 'class': '9', 'startTime': '11:30', 'endTime': '12:00'}],
+      },
+      {
+        'day': 'Thursday',
+        'periods': [{'pdno': 1, 'class': '9', 'startTime': '10:00', 'endTime': '10:30'},
+          {'pdno': 2, 'class': '8', 'startTime': '10:45', 'endTime': '11:15'},
+          {'pdno': 3, 'class': '9', 'startTime': '11:30', 'endTime': '12:00'}],
+      },
+      {
+        'day': 'Friday',
+        'periods': [{'pdno': 1, 'class': '7', 'startTime': '10:00', 'endTime': '10:30'},
+          {'pdno': 2, 'class': '8', 'startTime': '10:45', 'endTime': '11:15'},
+          {'pdno': 3, 'class': '9', 'startTime': '11:30', 'endTime': '12:00'}],
+      },
   ];
     Map<String, dynamic> timeTable;
     print(formattedDay);
@@ -109,8 +120,8 @@ class _ClassroomScreenState extends State<ClassroomScreen> {
       default:
         return Container();
     }
-    print('num: ${timeTable['0']}');
-
+    print('num: ${timeTable['day']}');
+    print('indexlength : ${timeTable['periods'].length}');
     // List<Widget> _periods = [];
     // for (int i = 0; i < 7; i++) _periods.add(periodWidgets(i, formattedDay));
     return Container(
@@ -158,59 +169,88 @@ class _ClassroomScreenState extends State<ClassroomScreen> {
                           Colors.greenAccent[400]
                         ])),
                         child: Row(
-                            children: List.generate(timeTableList.length, (index) {
+                            children: List.generate(timeTable['periods'].length, (index) {
                           // print(timeTable['$index'].toString());
-                          return Row(
-                            children: <Widget>[
-                              GestureDetector(
-                                behavior: HitTestBehavior.translucent,
-                                onTap: (){
-                                  Navigator.of(context).push(MaterialPageRoute(builder: (context) =>
-                                      DiscussionsScreen(date: saveFormattedDate, grade: timeTable['$index'].toString().substring(timeTable['$index'].toString().length-2),period: index)));
-                                  print(hrs);
+                          return StreamBuilder<QuerySnapshot>(
+                            stream: firestore.collection('grade_${timeTable['periods'][index]['class']}').snapshots(),
+                            builder: (context, snapshot) {
+                              if (!snapshot.hasData)
+                                return Center(
+                                  child: CircularProgressIndicator(
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                        Theme.of(context).primaryColor)));
+                              else  {
+                                _items = snapshot.data.documents;
+                                _items.forEach((element) {
+                                  if(element.documentID == saveFormattedDate)
+                                    if(element.data.containsKey('url_period_${timeTable['periods'][index]['pdno']}'))
+                                      {
+                                        print('KEY --->> TRUE');
+                                        isVideoUploaaded = true;
+                                      }
+                                    else  isVideoUploaaded = false;
+                                });
+                              return Row(
+                                    children: <Widget>[
+                                      GestureDetector(
+                                        behavior: HitTestBehavior.translucent,
+                                        onTap: (){
+                                          Navigator.of(context).push(MaterialPageRoute(builder: (context) =>
+                                              DiscussionsScreen(date: saveFormattedDate, grade: timeTable['periods'][index]['class'],period: timeTable['periods'][index]['pdno'])));
+                                          print(hrs);
 //                                  hrs == (9+index) && i == 0
 //                                  ? Navigator.of(context).pushNamed('/live')
 //                                  : Navigator.of(context).pushNamed('/discussions');
-                                },
-                                child: Container(
-                                    height: 80,
-                                    width: 100,
-                                    decoration: BoxDecoration(
-                                        gradient: i == 0
-                                            ? LinearGradient(colors: [
-                                                Colors.deepOrange[
-                                                    (index + 1) * 100],
-                                                Colors.deepOrange[
-                                                    100 + ((index + 1) * 100)]
-                                              ])
-                                            : null),
-                                    // color: Colors.deepOrange[100+(index*100)],
-                                    child: Align(
-                                      alignment: Alignment.center,
-                                      child: Column(
-                                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                        crossAxisAlignment: CrossAxisAlignment.center,
-                                        children: <Widget>[
-                                          Text(
-                                            timeTable['$index'].toString(),
-                                            style: TextStyle(
-                                              fontSize: 12,
-                                            ),
-                                            textAlign: TextAlign.center,
-                                            overflow: TextOverflow.clip,
-                                          ),
-                                        ],
+                                        },
+                                        child: Container(
+                                            height: 80,
+                                            width: 100,
+                                            decoration: BoxDecoration(
+                                                gradient: !isVideoUploaaded
+                                                    ? LinearGradient(colors: [
+                                                        Colors.deepOrange[
+                                                            (index + 1) * 100],
+                                                        Colors.deepOrange[
+                                                            100 + ((index + 1) * 100)]
+                                                      ])
+                                                    : null),
+                                            // color: Colors.deepOrange[100+(index*100)],
+                                            child: Align(
+                                              alignment: Alignment.center,
+                                              child: Column(
+                                                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                                crossAxisAlignment: CrossAxisAlignment.center,
+                                                children: <Widget>[
+                                                  Text(
+                                                    'Class : ${timeTable['periods'][index]['class']}',
+                                                    style: TextStyle(
+                                                      fontSize: 12,
+                                                    ),
+                                                    textAlign: TextAlign.center,
+                                                    overflow: TextOverflow.clip,
+                                                  ),
+                                                  Text(
+                                                    "${timeTable['periods'][index]['startTime']} - ${timeTable['periods'][index]['endTime']}",
+                                                    style: TextStyle(
+                                                      fontSize: 12,
+                                                    ),
+                                                    textAlign: TextAlign.center,
+                                                    overflow: TextOverflow.clip,
+                                                  ),
+                                                ],
+                                              ),
+                                            )),
                                       ),
-                                    )),
-                              ),
-                              VerticalDivider(
-                                thickness: 1,
-                                width: 1,
-                                color: Colors.white,
-                              )
-                            ],
-                          );
-                        })),
+                                      VerticalDivider(
+                                        thickness: 1,
+                                        width: 1,
+                                        color: Colors.white,
+                                      )
+                                    ],
+                                  );}
+                            }
+                          );}
+                              )),
                       ),
                     ),
                   ),
@@ -221,9 +261,9 @@ class _ClassroomScreenState extends State<ClassroomScreen> {
 
   @override
   Widget build(BuildContext context) {
-    int hr;
     List<Widget> _dateTileWidgets = [];
-    for (int i = 0; i < 20; i++) _dateTileWidgets.add(dateTiles(i));
+    print(launchDate.difference(DateTime.now()).inDays);
+    for (int i = 0; i <= DateTime.now().difference(launchDate).inDays; i++) _dateTileWidgets.add(dateTiles(i));
     return Scaffold(
         body: Column(
       children: <Widget>[
@@ -255,9 +295,9 @@ class _ClassroomScreenState extends State<ClassroomScreen> {
 //                  );
 //                })
                 children: [
-                  Text('09:00'), SizedBox(width: 65),
                   Text('10:00'), SizedBox(width: 65),
-                  Text('11:00'), SizedBox(width: 65),
+                  Text('10:30'), SizedBox(width: 65),
+                  Text('10:00'), SizedBox(width: 65),
                   Text('12:00'), SizedBox(width: 65)
                 ],
                 )),
