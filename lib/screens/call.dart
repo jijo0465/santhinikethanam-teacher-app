@@ -140,7 +140,7 @@ class _CallPageState extends State<CallPage> with SingleTickerProviderStateMixin
     await AgoraRtcEngine.enableWebSdkInteroperability(true);
     await AgoraRtcEngine.joinChannel(
         null,
-        'live',
+        'class_${grade.id}',
         null,
         0);
     // await AgoraRtcEngine.enableWebSdkInteroperability(true);
@@ -163,9 +163,9 @@ class _CallPageState extends State<CallPage> with SingleTickerProviderStateMixin
     AgoraRtcEngine.onJoinChannelSuccess = (String channel,
         int uid,
         int elapsed,) {
-      firestore.collection('grade_${grade.id}').document('$date').setData({'broadcaster_period_1': {'users': null}});
-      firestore.collection('grade_${grade.id}').document('$date')
-          .setData({'user_period_1': {'uid': uid}})
+      firestore.collection('live').document('grade_${grade.id}').setData({'liveBroadcastUserId': {'users': null}},merge: true);
+      firestore.collection('live').document('grade_${grade.id}')
+          .setData({'liveBroadcastChannelId': uid},merge: true)
           .then((value) {
         startRecording(uid);
         broadcasterUid = uid;
@@ -489,6 +489,10 @@ class _CallPageState extends State<CallPage> with SingleTickerProviderStateMixin
 
   void _onCallEnd(BuildContext context) {
     stopRecording(broadcasterUid);
+    if(record)
+    _stopVideoRecording();
+    firestore.collection('live').document('grade_${grade.id}')
+        .setData({'liveBroadcastChannelId': null},merge: true);
     Navigator.pop(context);
   }
 

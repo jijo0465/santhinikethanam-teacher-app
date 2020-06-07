@@ -287,7 +287,7 @@ class _DiscussionsScreenState extends State<DiscussionsScreen> {
                                                   final StorageTaskSnapshot downloadUrl = (await uploadTask.onComplete);
                                                   final String url = (await downloadUrl.ref.getDownloadURL());
                                                   print("URL is $url");
-                                                  updateDatabase(url);
+                                                  updateDatabaseVideo(url);
                                                   setState(() {
                                                     uploaded = true;
                                                     uploading = false;
@@ -538,8 +538,7 @@ class _DiscussionsScreenState extends State<DiscussionsScreen> {
                             .width,
                         child: Align(
                           alignment: Alignment.centerLeft,
-                          child: Text(item['discussion_period_${widget
-                              .period}'][widgetIndex]['comment']),
+                          child: Text(item['periods'][widgetIndex]['comment']),
                         ),
                       )),
                 ],
@@ -556,60 +555,82 @@ class _DiscussionsScreenState extends State<DiscussionsScreen> {
       }
   }
 
-  updateDatabase(String url) {
-    print('UODATE DATABASE');
-    DocumentReference documentReference =
-    firestore.collection('grade_${widget.grade}').document('${widget.date}');
-    firestore.collection('grade_${widget.grade}').getDocuments().then((value) {
-      value.documents.forEach((element) {
-      });
-      if(value.documents.isEmpty)
-        firestore.runTransaction((transaction) async {
-          await transaction.set(
-              documentReference, {'period_${widget.period}': url});
-          print('---- >>>SET');
-        });
-      else
-        firestore.collection('grade_${widget.grade}').document('${widget.date}').get().then((value) {
-          if(value.exists)
-            firestore.runTransaction((transaction) async {
-              await transaction.update(
-                  documentReference, {'url_period_${widget.period}': url});
-              print('--- >>> UPDATED ');
-            });
-          else
-            firestore.runTransaction((transaction) async {
-              await transaction.set(
-                  documentReference, {'url_period_${widget.period}': url});
-              print('--- >>> UPDATED ');
-            });
-        });
-
-    });
+  updateDatabaseVideo(String url) {
+//    List<Map<String, dynamic>> data = [{
+//      'pdno':'${widget.period}',
+//      'videoUrl': url,
+//    }];
+      firestore.collection('grade_${widget.grade}').document('${widget.date}').setData(
+          {'period_${widget.period}': {'pdno': '${widget.period}', 'videoUrl': url}},merge: true
+      );
+//    var updateUrl ;
+//    print('UODATE DATABASE');
+//    DocumentReference documentReference =
+//    firestore.collection('grade_${widget.grade}').document('${widget.date}');
+//    firestore.collection('grade_${widget.grade}').getDocuments().then((value) {
+////      value.documents.forEach((element) {
+////      });
+//      if(value.documents.isEmpty)
+//        firestore.runTransaction((transaction) async {
+//          await transaction.set(
+////              documentReference, {'period_${widget.period}': url});
+//          documentReference,{'periods': FieldValue.arrayUnion(data)});
+//          print('---- >>>SET');
+//        });
+//      else
+//        firestore.collection('grade_${widget.grade}').document('${widget.date}').get().then((value) {
+//          if(value.exists)
+//            firestore.runTransaction((transaction) async {
+//              await transaction.update(
+////                  documentReference, {'url_period_${widget.period}': url});
+//                  documentReference,{'periods': {'pdno': widget.period ,'periodDetails': FieldValue.arrayUnion([{'videoUrl': url}])}});
+//              print('--- >>> UPDATED1 ');
+//            });
+//          else
+//            firestore.runTransaction((transaction) async {
+//              await transaction.set(
+////                  documentReference, {'url_period_${widget.period}': url});
+//                  documentReference,{'periods': FieldValue.arrayUnion(data)});
+//              print('--- >>> UPDATED2 ');
+//            });
+//        });
+//
+//    });
   }
 
   _addToDiscussions(String text) async {
-    var comment = [
-      {
+    DocumentSnapshot document;
+    var comment = {
         'comment': text,
         'date': DateTime.now().toUtc(),
         'url': "https://indiadidac.org/wp-content/uploads/2018/05/teacher.jpg"
-      }
-    ];
-    DocumentReference documentReference =
-    firestore.collection('grade_${widget.grade}').document('${widget.date}');
-    firestore.collection('grade_${widget.grade}').getDocuments().then((value) {
-      if(value.documents.isEmpty)
-      firestore.runTransaction((transaction) async {
-        await transaction.set(
-            documentReference, {'discussion_period_${widget.period}': FieldValue.arrayUnion(comment)});
-      });
-    else
-      firestore.runTransaction((transaction) async {
-        await transaction.update(
-            documentReference, {'discussion_period_${widget.period}': FieldValue.arrayUnion(comment)});
-      });
-  });
+      };
+//    if(value.documents.isEmpty)
+      firestore.collection('grade_${widget.grade}').document('${widget.date}').setData(
+          {'period_${widget.period}': {'pdno': '${widget.period}', 'discussion': FieldValue.arrayUnion([comment])}},merge: true
+      );
+//    firestore.collection('grade_${widget.grade}').document('${widget.date}').get().then((value) {
+//
+//    });
+//    DocumentReference documentReference =
+//    firestore.collection('grade_${widget.grade}').document('${widget.date}');
+//    firestore.collection('grade_${widget.grade}').getDocuments().then((value) {
+//      if(value.documents.isEmpty)
+//        firestore.collection('grade_${widget.grade}').document('${widget.date}').setData(
+//            {'periods': {'pdno': '${widget.period}', 'discussion': FieldValue.arrayUnion([comment])}},merge: true
+//        );
+////      firestore.runTransaction((transaction) async {
+////        await transaction.set(
+//////            documentReference, {'discussion_period_${widget.period}': FieldValue.arrayUnion(comment)});
+////            documentReference,{'periods': {'pdno': '${widget.period}', 'discussion': FieldValue.arrayUnion(comment)}});
+//      });
+//    else
+////      firestore.runTransaction((transaction) async {
+////        await transaction.update(
+//////            documentReference, {'discussion_period_${widget.period}': FieldValue.arrayUnion(comment)});
+////            documentReference,{'periods': {'pdno': widget.period ,'periodDetails': {'discussion': FieldValue.arrayUnion(comment)}}});
+//      });
+//  });
   }
 
   Widget getPlayerControls(){
