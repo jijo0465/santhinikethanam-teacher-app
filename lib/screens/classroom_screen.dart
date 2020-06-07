@@ -208,9 +208,9 @@ class _ClassroomScreenState extends State<ClassroomScreen> {
                                             decoration: BoxDecoration(
                                                 gradient: !isVideoUploaaded
                                                     ? LinearGradient(colors: [
-                                                        Colors.deepOrange[
+                                                        Colors.grey[
                                                             (index + 1) * 100],
-                                                        Colors.deepOrange[
+                                                        Colors.grey[
                                                             100 + ((index + 1) * 100)]
                                                       ])
                                                     : null),

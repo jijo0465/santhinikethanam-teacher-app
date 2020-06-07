@@ -95,7 +95,6 @@ class _DiscussionsScreenState extends State<DiscussionsScreen> {
 
   @override
   void initState() {
-    uploaded = widget.uploadStatus;
     // TODO: implement initState
     widgetIndex = 0;
 //    grade.setId(id);
@@ -558,7 +557,7 @@ class _DiscussionsScreenState extends State<DiscussionsScreen> {
 //      'videoUrl': url,
 //    }];
       firestore.collection('grade_${widget.grade}').document('${widget.date}').setData(
-          {'period_${widget.period}': {'pdno': '${widget.period}', 'videoUrl': url}},merge: true
+          {'period _${widget.period}': {'pdno': '${widget.period}', 'videoUrl': url}},merge: true
       );
 //    var updateUrl ;
 //    print('UODATE DATABASE');
