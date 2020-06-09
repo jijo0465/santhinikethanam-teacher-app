@@ -45,6 +45,7 @@ class _HomePageState extends State<HomePage> {
               ),
               Expanded(
                 child: PageView(
+                  physics: NeverScrollableScrollPhysics(),
                   controller: _pageController,
                   children: <Widget>[
                     Container(
@@ -62,7 +63,7 @@ class _HomePageState extends State<HomePage> {
                                 child: SingleChildScrollView(
                                   child: Column(
                                     children: <Widget>[
-//                                      SizedBox(height: 30),
+                                      SizedBox(height: 38),
                                       Row(
                                         children: [
                                           SizedBox(
@@ -406,7 +407,7 @@ class _HomePageState extends State<HomePage> {
                               // SizedBox(height: 60)
                             ],
                           ),
-//                          Positioned(top: 60, child: DigiPeriodCard()),
+                          Positioned(top: 60, child: DigiPeriodCard()),
                         ],
                       ),
                     ),

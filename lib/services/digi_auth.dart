@@ -16,7 +16,7 @@ class DigiAuth{
     String data = jsonEncode(params);
     Teacher teacher;
     await http.post(url, headers: headers, body: data).then((response) async {
-
+//      print((response.body));
       if (response.body != null) {
         final Map body = json.decode(response.body);
         print(body);

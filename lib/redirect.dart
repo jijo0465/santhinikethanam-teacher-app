@@ -30,14 +30,15 @@ class _RedirectState extends State<Redirect> {
     TeacherState teacherState = Provider.of<TeacherState>(context, listen: false);
     return Consumer<LoginState>(
         builder: (BuildContext context, LoginState value, Widget child) {
-      if (_loginStatus!=null && value.status==Status.Uninitialized) {
+      if (value.status==Status.Uninitialized) {
         SharedPreferences.getInstance().then((prefs) async {
           _loginStatus = prefs.getBool('loggedIn');
           if (_loginStatus == true) {
-//            String st = (await SharedPreferences.getInstance()).getString('parent');
-//            Map teacherMap = json.decode(st);
-//            Teacher teacher = Teacher.fromMap(teacherMap);
-//            teacherState.setTeacher(teacher);
+            String st = (await SharedPreferences.getInstance()).getString('teacher');
+            print("STGGGGG   $st");
+            Map<String,dynamic> teacherMap = json.decode(st);
+            Teacher teacher = Teacher.fromMap(teacherMap);
+            teacherState.setTeacher(teacher);
             value.setStatus(Status.Authenticated);
           }else{
             value.setStatus(Status.Unauthenticated);

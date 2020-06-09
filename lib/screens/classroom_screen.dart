@@ -1,8 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import 'package:teacher_app/components/digicampus_appbar.dart';
+import 'package:teacher_app/models/timetable.dart';
 import 'package:teacher_app/screens/discussions_screen.dart';
+import 'package:teacher_app/states/teacher_state.dart';
 
 class ClassroomScreen extends StatefulWidget {
   const ClassroomScreen({Key key}) : super(key: key);
@@ -15,7 +18,8 @@ class ClassroomScreen extends StatefulWidget {
 
 class _ClassroomScreenState extends State<ClassroomScreen> {
   ScrollController _scrollController = new ScrollController();
-  var launchDate = DateTime(2020,06,01);
+  var launchDate = DateTime(2020,06,08);
+  DateTime lastDate;
   Firestore firestore = Firestore.instance;
   List<DocumentSnapshot> _items;
   // ScrollController _controller2;
@@ -40,12 +44,14 @@ class _ClassroomScreenState extends State<ClassroomScreen> {
   //   super.initState();
   // }
 
-  // @override
-  // void initState() {
-  //   // iconOffset = 50.0;
-  //   // watchLive = false;
-  //   super.initState();
-  // }
+   @override
+   void initState() {
+     // iconOffset = 50.0;
+     // watchLive = false;
+
+     lastDate =  DateTime.now().add(Duration(days: 1));
+     super.initState();
+   }
 
   @override
   void dispose() {
@@ -54,11 +60,12 @@ class _ClassroomScreenState extends State<ClassroomScreen> {
   }
 
   Widget dateTiles(int i) {
+    TeacherState teacherState =  Provider.of<TeacherState>(context, listen: true);
     print('DATETILES');
     DateFormat _dateFormat = DateFormat.yMMMd();
     DateFormat _dateFormatDay = DateFormat.E();
 //    DateFormat _dateFormatSave = DateFormat.yMd();
-    var date = DateTime.now().subtract(Duration(days: i));
+    var date = lastDate.subtract(Duration(days: i));
     int hrs = 11;
     // print(hrs);
     // int mts = date.minute;
@@ -66,39 +73,44 @@ class _ClassroomScreenState extends State<ClassroomScreen> {
     String formattedDate = _dateFormat.format(date);
     String saveFormattedDate = DateFormat('dd-MM-yyyy').format(date);
     bool isVideoUploaaded= false;
+    var startTime = ['10:00','10:45','11:30'];
+    var endTime = ['10:30','11:15','12:00'];
+//    print('TIMETABLE : : : : ${TimeTable().getTeacherTimeTable(teacherState.teacher.teacherId)[0]['periods'][2]['class']}');
 
-    List<Map<String, dynamic>> timeTableList = [
-      {
-        'day': 'Monday',
-        'periods': [{'pdno': 1, 'class': '7', 'startTime': '10:00', 'endTime': '10:30'},
-          {'pdno': 2, 'class': '8', 'startTime': '10:45', 'endTime': '11:15'},
-          {'pdno': 3, 'class': '7', 'startTime': '11:30', 'endTime': '12:00'}],
-      },
-      {
-        'day': 'Tuesday',
-        'periods': [{'pdno': 1, 'class': '7', 'startTime': '10:00', 'endTime': '10:30'},
-          {'pdno': 2, 'class': '8', 'startTime': '10:45', 'endTime': '11:15'},
-          {'pdno': 3, 'class': '9', 'startTime': '11:30', 'endTime': '12:00'}],
-      },
-      {
-        'day': 'Wednesday',
-        'periods': [{'pdno': 1, 'class': '8', 'startTime': '10:00', 'endTime': '10:30'},
-          {'pdno': 2, 'class': '7', 'startTime': '10:45', 'endTime': '11:15'},
-          {'pdno': 3, 'class': '9', 'startTime': '11:30', 'endTime': '12:00'}],
-      },
-      {
-        'day': 'Thursday',
-        'periods': [{'pdno': 1, 'class': '9', 'startTime': '10:00', 'endTime': '10:30'},
-          {'pdno': 2, 'class': '8', 'startTime': '10:45', 'endTime': '11:15'},
-          {'pdno': 3, 'class': '9', 'startTime': '11:30', 'endTime': '12:00'}],
-      },
-      {
-        'day': 'Friday',
-        'periods': [{'pdno': 1, 'class': '7', 'startTime': '10:00', 'endTime': '10:30'},
-          {'pdno': 2, 'class': '8', 'startTime': '10:45', 'endTime': '11:15'},
-          {'pdno': 3, 'class': '9', 'startTime': '11:30', 'endTime': '12:00'}],
-      },
-  ];
+    List<Map<String, dynamic>> timeTableList = TimeTable().getTeacherTimeTable(teacherState.teacher.teacherId);
+//    [
+//      {
+//        'day': 'Monday',
+//        'periods': [{'pdno': 1, 'class': '7', 'startTime': '10:00', 'endTime': '10:30'},
+//          {'pdno': 2, 'class': '8', 'startTime': '10:45', 'endTime': '11:15'},
+//          {'pdno': 3, 'class': '7', 'startTime': '11:30', 'endTime': '12:00'}],
+//      },
+//      {
+//        'day': 'Tuesday',
+//        'periods': [{'pdno': 1, 'class': '7', 'startTime': '10:00', 'endTime': '10:30'},
+//          {'pdno': 2, 'class': '8', 'startTime': '10:45', 'endTime': '11:15'},
+//          {'pdno': 3, 'class': '9', 'startTime': '11:30', 'endTime': '12:00'}],
+//      },
+//      {
+//        'day': 'Wednesday',
+//        'periods': [{'pdno': 1, 'class': '8', 'startTime': '10:00', 'endTime': '10:30'},
+//          {'pdno': 2, 'class': '7', 'startTime': '10:45', 'endTime': '11:15'},
+//          {'pdno': 3, 'class': '9', 'startTime': '11:30', 'endTime': '12:00'}],
+//      },
+//      {
+//        'day': 'Thursday',
+//        'periods': [{'pdno': 1, 'class': '9', 'startTime': '10:00', 'endTime': '10:30'},
+//          {'pdno': 2, 'class': '8', 'startTime': '10:45', 'endTime': '11:15'},
+//          {'pdno': 3, 'class': '9', 'startTime': '11:30', 'endTime': '12:00'}],
+//      },
+//      {
+//        'day': 'Friday',
+//        'periods': [{'pdno': 1, 'class': '7', 'startTime': '10:00', 'endTime': '10:30'},
+//          {'pdno': 2, 'class': '8', 'startTime': '10:45', 'endTime': '11:15'},
+//          {'pdno': 3, 'class': '9', 'startTime': '11:30', 'endTime': '12:00'}],
+//      },
+//  ];
+    print(timeTableList);
     Map<String, dynamic> timeTable;
     print(formattedDay);
     switch (formattedDay) {
@@ -199,8 +211,8 @@ class _ClassroomScreenState extends State<ClassroomScreen> {
                                       GestureDetector(
                                         behavior: HitTestBehavior.translucent,
                                         onTap: (){
-                                          Navigator.of(context).push(MaterialPageRoute(builder: (context) =>
-                                              DiscussionsScreen(date: saveFormattedDate, grade: timeTable['periods'][index]['class'], period: timeTable['periods'][index]['pdno'], uploadStatus: isVideoUploaaded)));
+//                                          Navigator.of(context).push(MaterialPageRoute(builder: (context) =>
+//                                              DiscussionsScreen(date: saveFormattedDate, grade: timeTable['periods'][index]['class'], period: timeTable['periods'][index]['pdno'], uploadStatus: isVideoUploaaded)));
                                           print(hrs);
 //                                  hrs == (9+index) && i == 0
 //                                  ? Navigator.of(context).pushNamed('/live')
@@ -226,7 +238,10 @@ class _ClassroomScreenState extends State<ClassroomScreen> {
                                                 crossAxisAlignment: CrossAxisAlignment.center,
                                                 children: <Widget>[
                                                   Text(
-                                                    'Class : ${timeTable['periods'][index]['class']}',
+//                                                    'Class : ',
+                                                    timeTable['periods'][index]['class']==0?
+                                                        'Free Period'
+                                                    :'Class : ${timeTable['periods'][index]['class']}',
                                                     style: TextStyle(
                                                       fontSize: 12,
                                                     ),
@@ -234,7 +249,7 @@ class _ClassroomScreenState extends State<ClassroomScreen> {
                                                     overflow: TextOverflow.clip,
                                                   ),
                                                   Text(
-                                                    "${timeTable['periods'][index]['startTime']} - ${timeTable['periods'][index]['endTime']}",
+                                                    "${startTime[timeTable['periods'][index]['pdno']-1]} - ${endTime[timeTable['periods'][index]['pdno']-1]}",
                                                     style: TextStyle(
                                                       fontSize: 12,
                                                     ),
@@ -267,7 +282,7 @@ class _ClassroomScreenState extends State<ClassroomScreen> {
   Widget build(BuildContext context) {
     List<Widget> _dateTileWidgets = [];
     print(launchDate.difference(DateTime.now()).inDays);
-    for (int i = 0; i <= DateTime.now().difference(launchDate).inDays; i++) _dateTileWidgets.add(dateTiles(i));
+    for (int i = 0; i <= lastDate.difference(launchDate).inDays; i++) _dateTileWidgets.add(dateTiles(i));
     return Scaffold(
         body: Column(
       children: <Widget>[
@@ -276,6 +291,7 @@ class _ClassroomScreenState extends State<ClassroomScreen> {
           onDrawerTapped: () {
             Navigator.of(context).pop();
           },
+          title: 'Virtual Classroom',
         ),
         SizedBox(height: 12),
         Container(

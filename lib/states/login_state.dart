@@ -5,7 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:teacher_app/models/teacher.dart';
 import 'package:teacher_app/services/digi_auth.dart';
 import 'package:teacher_app/states/teacher_state.dart';
-
+import 'package:teacher_app/models/timetable.dart';
 enum Status { Uninitialized, Authenticated, Authenticating, Unauthenticated }
 
 
@@ -23,12 +23,17 @@ class LoginState with ChangeNotifier {
     DigiAuth digiAuth = DigiAuth();
     Teacher teacher = await digiAuth.signIn(teacherId, password);
     if(teacher!=null){
-      print('Teacher is not null');
       teacherState.setTeacher(teacher);
+//      TimeTable timeTable = TimeTable();
+//      List<Map<String, dynamic>> timeTableList = timeTable.getTeacherTimeTable(teacher.teacherId);
+//      teacherState.setTimeTable(timeTableList);
       _status = Status.Authenticated;
       _prfs = await SharedPreferences.getInstance();
+      print('GIGUIguUHUHUHu');
+      print(teacher.teacherId);
+      print(json.encode(teacher));
       await _prfs.setBool('loggedIn',true);
-//      await _prfs.setString('teacher', json.encode(teacher));
+      await _prfs.setString('teacher', json.encode(teacher));
       notifyListeners();
     }else{
       print('teacher is null');

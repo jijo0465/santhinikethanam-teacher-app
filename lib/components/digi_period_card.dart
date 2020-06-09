@@ -1,5 +1,9 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
+import 'package:teacher_app/models/timetable.dart';
+import 'package:teacher_app/states/teacher_state.dart';
 
 class DigiPeriodCard extends StatefulWidget {
   DigiPeriodCard({Key key}) : super(key: key);
@@ -10,11 +14,42 @@ class DigiPeriodCard extends StatefulWidget {
 
 class _DigiPeriodCardState extends State<DigiPeriodCard> {
   PageController _pageController;
+  Map<String,dynamic> timeTable;
+  DateFormat dateFormat = DateFormat.E();
+  var date = DateTime.now();
 
   @override
   void initState() {
     _pageController = PageController(initialPage: 0, viewportFraction: 0.9);
     super.initState();
+  }
+
+  int getGrade(int index) {
+    TeacherState teacherState =  Provider.of<TeacherState>(context, listen: true);
+    List<Map<String, dynamic>> timeTableList = TimeTable().getTeacherTimeTable(teacherState.teacher.teacherId);
+    String formattedDay = dateFormat.format(date);
+    print(formattedDay);
+    switch (formattedDay) {
+      case 'Mon':
+        timeTable = timeTableList[0];
+        break;
+      case 'Tue':
+        timeTable = timeTableList[1];
+        break;
+      case 'Wed':
+        timeTable = timeTableList[2];
+        break;
+      case 'Thu':
+        timeTable = timeTableList[3];
+        break;
+      case 'Fri':
+        timeTable = timeTableList[4];
+        break;
+      default:
+        timeTable = null;
+    }
+    print(timeTable);
+    return timeTable['periods'][index]['class'];
   }
 
   @override
@@ -28,6 +63,7 @@ class _DigiPeriodCardState extends State<DigiPeriodCard> {
             controller: _pageController,
             itemCount: 3,
             itemBuilder: (BuildContext context, int index) {
+              int grade = getGrade(index);
               return Container(
                 margin: EdgeInsets.only(left: 2, right: 2),
                 child: Card(
@@ -44,8 +80,12 @@ class _DigiPeriodCardState extends State<DigiPeriodCard> {
                         'Time Table',
                         style: TextStyle(fontSize: 12),
                       )),
-                      Container(
-                          child: Text('Period : 6   Class : X D',
+                      grade == 0
+                      ?Container(
+                          child: Text('Period : ${index+1}   Free',
+                              style: TextStyle(fontSize: 18)))
+                      :Container(
+                          child: Text('Period : ${index+1}   Class : $grade',
                               style: TextStyle(fontSize: 18)))
                     ],
                   ),

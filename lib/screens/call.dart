@@ -1,5 +1,15 @@
 import 'dart:async';
-import 'dart:convert';
+//import 'dart:io' as io;
+
+//import 'package:audioplayers/audioplayers.dart';
+import 'package:file/file.dart';
+import 'package:file/local.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_audio_recorder/flutter_audio_recorder.dart';
+//import 'package:path_provider/path_provider.dart';
+//import 'dart:async';
+//import 'dart:convert';
 import 'dart:io';
 import 'dart:ui';
 
@@ -9,6 +19,7 @@ import 'package:diagonal_scrollview/diagonal_scrollview.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screen_recording/flutter_screen_recording.dart';
+import 'package:flutter_audio_recorder/flutter_audio_recorder.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:teacher_app/components/digicampus_appbar.dart';
@@ -32,6 +43,7 @@ class _CallPageState extends State<CallPage> with SingleTickerProviderStateMixin
   final double _maxScale = 3;
   final TextEditingController _textFieldController =
   new TextEditingController();
+  String channelName;
   DiagonalScrollViewController _controller;
   AnimationController _animationController;
   Animation _animation;
@@ -40,7 +52,7 @@ class _CallPageState extends State<CallPage> with SingleTickerProviderStateMixin
   DocumentSnapshot _discussionSnapshot;
   List<Widget> discussionListWidget = [];
   List<Map<String, dynamic>> _discussionData = [];
-  List<int> participantId = [];
+  List<String> participantName = [];
   Grade grade = Grade.empty();
   int widgetIndex = 0;
   int broadcasterUid;
@@ -62,6 +74,9 @@ class _CallPageState extends State<CallPage> with SingleTickerProviderStateMixin
   bool record = false;
   Color discussionFieldColor = Colors.grey;
   String date = DateFormat('dd-MM-yyyy').format(DateTime.now());
+  FlutterAudioRecorder _recorder;
+  Recording _current;
+  RecordingStatus _currentStatus = RecordingStatus.Unset;
 
   @override
   void dispose() {
@@ -127,9 +142,9 @@ class _CallPageState extends State<CallPage> with SingleTickerProviderStateMixin
       });
       return;
     }
-
     _addAgoraEventHandlers();
     await _initAgoraRtcEngine();
+//    await _initAudio();
   }
 
   /// Create agora sdk instance and initialize
@@ -164,6 +179,7 @@ class _CallPageState extends State<CallPage> with SingleTickerProviderStateMixin
     AgoraRtcEngine.onJoinChannelSuccess = (String channel,
         int uid,
         int elapsed,) {
+      channelName = channel;
       firestore.collection('live').document('grade_${grade.id}').setData({'liveBroadcastUserId': {'users': null}},merge: true);
       firestore.collection('live').document('grade_${grade.id}')
           .setData({'liveBroadcastChannelId': uid},merge: true)
@@ -180,7 +196,7 @@ class _CallPageState extends State<CallPage> with SingleTickerProviderStateMixin
         setState(() {
           _infoStrings.removeLast();
         });
-//        startRecording();
+//        startRecording(uid);
       });
     };
 
@@ -387,11 +403,14 @@ class _CallPageState extends State<CallPage> with SingleTickerProviderStateMixin
               onPressed: onCheckParticipants ? null : ()
 //              => _onCallEnd(context),
               {
-                setState(() {
-                  record = !record;
-                });
-                record ? _startVideoRecording()
-                    : _stopVideoRecording();
+//                setState(() {
+//                  record = !record;
+//                });
+//                record ? startRecording(broadcasterUid)
+//                    : stopRecording(broadcasterUid);
+                
+//                record ? _startVideoRecording()
+//                    : _stopVideoRecording();
               },
               child: Icon(
                 CupertinoIcons.circle_filled,
@@ -524,40 +543,56 @@ class _CallPageState extends State<CallPage> with SingleTickerProviderStateMixin
     AgoraRtcEngine.switchCamera();
   }
 
-  List<Widget> _getChildren(DocumentSnapshot item) {
+  List<Widget> _getChildrenColumn(List<dynamic> item) {
+    List<Widget> children;
+    int cubeId = 0;
+    int totalParticipants = item != null ? item.length : 0;
+    for (num x = 0; x < totalParticipants; x++) {
+      
+    }
+  }
+
+  List<Widget> _getChildren(List<dynamic> item) {
     List<Widget> children = [];
     Color childColor = Colors.blueGrey;
     double childSize = 80;
     double childMargin = 20;
     num numChildrenX;
     num numChildrenY;
-    int cubeId = 1;
-    int totalParticipants = item['users'] != null ? item['users'].length : 0;
+    int cubeId = 0;
+    int totalParticipants = item != null ? item.length : 0;
     numChildrenY = (totalParticipants / 5).ceil();
     for (int i = 0; i < totalParticipants; i++)
-      participantId.insert(i, item['users'][i]);
+      participantName.insert(i, item[i].toString());
+//    participantName.sort();
     print('PARTICIPANTS: $totalParticipants');
     for (num x = 0; x < numChildrenY; x++) {
       numChildrenX =
       (totalParticipants - (x * 5)) > 5 ? 5 : totalParticipants - (x * 5);
       for (num y = 0; y < numChildrenX; y++) {
         Widget cube = Container(
-          width: childSize,
-          height: childSize,
+//          width: childSize+20,
+//          height: childSize,
           decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: childColor,
+            borderRadius: BorderRadius.circular(20),
+//            color: childColor,
           ),
           child: Center(
-            child: Text(
-              (cubeId++).toString(),
-              style: TextStyle(color: Colors.white, fontSize: 30),
+            child: Container(
+              padding: EdgeInsets.all(8),
+              child: Text(
+//              (cubeId++).toString(),
+                '${cubeId+1}. ${participantName[cubeId++]}',
+                style: TextStyle(color: Colors.white, fontSize: 18),
+                overflow: TextOverflow.clip,
+              ),
             ),
           ),
         );
-        children.add(Positioned(
-          left: childMargin + (childMargin + childSize) * y,
-          top: childMargin + (childMargin + childSize) * x,
+        children.add(Padding(
+          padding: EdgeInsets.all(0),
+//          left: childMargin + (childMargin + childSize) * y,
+//          top: childMargin + (childMargin + childSize) * x,
           child: cube,
         ));
       }
@@ -753,7 +788,7 @@ class _CallPageState extends State<CallPage> with SingleTickerProviderStateMixin
                               }
                               if (_participantSnapshot['liveBroadcastUserId']['users'] != null) {
                                 _boxSizeHeight = 104.0 *
-                                    (_participantSnapshot['users'].length / 5)
+                                    (_participantSnapshot['liveBroadcastUserId']['users'].length / 5)
                                         .ceil();
                                 return Container(
                                     width: MediaQuery
@@ -771,28 +806,34 @@ class _CallPageState extends State<CallPage> with SingleTickerProviderStateMixin
                                           onCheckParticipants ? 0.4 : 0.0),
                                     ),
                                     child:
-                                    DiagonalScrollView(
-                                        enableFling: true,
-                                        enableZoom: true,
-                                        flingVelocityReduction: 0.3,
-                                        minScale: _minScale,
-                                        maxScale: _maxScale,
-                                        maxHeight: _boxSizeHeight,
-                                        maxWidth: _boxSizeWidth,
-                                        onCreated: (
-                                            DiagonalScrollViewController controller) {
-                                          _controller = controller;
-                                        },
-                                        child:
-                                        Container(
-                                          height: _boxSizeHeight,
-                                          width: _boxSizeWidth,
-                                          child: Stack(
-                                            children: _getChildren(
-                                                _participantSnapshot),
-                                          ),
-                                        )
+                                    SingleChildScrollView(
+                                      padding: EdgeInsets.all(8),
+                                      child: Column(
+                                        children: _getChildren(_participantSnapshot['liveBroadcastUserId']['users']),
+                                      ),
                                     )
+//                                    DiagonalScrollView(
+//                                        enableFling: true,
+//                                        enableZoom: true,
+//                                        flingVelocityReduction: 0.3,
+//                                        minScale: _minScale,
+//                                        maxScale: _maxScale,
+//                                        maxHeight: _boxSizeHeight,
+//                                        maxWidth: _boxSizeWidth,
+//                                        onCreated: (
+//                                            DiagonalScrollViewController controller) {
+//                                          _controller = controller;
+//                                        },
+//                                        child:
+//                                        Container(
+//                                          height: _boxSizeHeight,
+//                                          width: _boxSizeWidth,
+//                                          child: Stack(
+//                                            children: _getChildren(
+//                                                _participantSnapshot['liveBroadcastUserId']['users']),
+//                                          ),
+//                                        )
+//                                    )
                                 );
                               }
                               else {
@@ -948,40 +989,126 @@ class _CallPageState extends State<CallPage> with SingleTickerProviderStateMixin
     );
   }
 //
-//  Future<void> startRecording(int uid) async {
-//    await Future.delayed(Duration(seconds: 80));
-//    print("Starting Recording");
-//    String url = 'http://192.168.0.12:8080/start_recording/$uid';
-//    Map<String, String> headers = {"Content-type": "application/json"};
+  Future<void> startRecording(int uid) async {
+    print("Starting Recording$channelName");
+    String url = 'http://192.168.0.12:8082/start_recording/$uid/$channelName';
+    Map<String, String> headers = {"Content-type": "application/json"};
 //    Map<String, String> params = {"uid": uid.toString()};
 //    String data = jsonEncode(params);
-//
-//    http.get(url, headers: headers).then((response) {
-//      // print(response.body);
-//      // resourceId = json.decode(response.body)['resourceId'];
-//      // sid = json.decode(response.body)['resourceId'];
-//    }).catchError((error) => print(error));
-//  }
-//
-//  Future<void> stopRecording(int uid) async {
-//    print('Stopping Recording....');
-//    String url = 'http://192.168.0.12:8080/stop_recording/$uid';
-//    Map<String, String> headers = {"Content-type": "application/json"};
+
+    http.get(url, headers: headers).then((response) {
+      // print(response.body);
+      // resourceId = json.decode(response.body)['resourceId'];
+      // sid = json.decode(response.body)['resourceId'];
+    }).catchError((error) => print(error));
+  }
+
+  Future<void> stopRecording(int uid) async {
+    print('Stopping Recording....$channelName');
+    String url = 'http://192.168.0.12:8082/stop_recording/$uid/$channelName';
+    Map<String, String> headers = {"Content-type": "application/json"};
 //    Map<String, dynamic> params = {"resourceId": "$resourceId", "sid": "$sid"};
 //    String data = jsonEncode(params);
-//    await http.get(url, headers: headers).then((response) {
-//      print(response.body);
-//    }).catchError((error) => print(error));
-//  }
+    await http.get(url, headers: headers).then((response) {
+      print(response.body);
+    }).catchError((error) => print(error));
+  }
 
   _startVideoRecording() async {
       bool start = await FlutterScreenRecording.startRecordScreen("${DateTime.now().day}_${DateTime.now().month}_${DateTime.now().year}");
+//      _startAudio();
       print('RECORD STATUS : $start');
   }
 
   _stopVideoRecording() async {
     String path = await FlutterScreenRecording.stopRecordScreen;
+//    _stopAudio();
     print('Recorded File : $path');
   }
+
+  _initAudio() async {
+    print('Audio INITIALIZED');
+    try {
+      if (await FlutterAudioRecorder.hasPermissions) {
+        String audioPath = "${DateTime.now().day}_${DateTime.now().month}_${DateTime.now().year}_audio";
+        Directory appDocDirectory;
+//        appDocDirectory = await getApplicationDocumentsDirectory();
+//        appDocDirectory = await getExternalStorageDirectory();
+        if (Platform.isIOS) {
+//          appDocDirectory = await getApplicationDocumentsDirectory();
+        } else {
+//          appDocDirectory = await getExternalStorageDirectory();
+        }
+
+        // can add extension like ".mp4" ".wav" ".m4a" ".aac"
+//        audioPath = appDocDirectory.path +
+//            audioPath +
+//            DateTime.now().millisecondsSinceEpoch.toString();
+
+        // .wav <---> AudioFormat.WAV
+        // .mp4 .m4a .aac <---> AudioFormat.AAC
+        // AudioFormat is optional, if given value, will overwrite path extension when there is conflicts.
+        _recorder =
+            FlutterAudioRecorder(audioPath, audioFormat: AudioFormat.WAV);
+
+        await _recorder.initialized;
+        // after initialization
+        var current = await _recorder.current(channel: 0);
+        print(current);
+        // should be "Initialized", if all working fine
+        setState(() {
+          _current = current;
+          _currentStatus = current.status;
+          print(_currentStatus);
+        });
+      } else {
+        Scaffold.of(context).showSnackBar(
+            new SnackBar(content: new Text("You must accept permissions")));
+      }
+    } catch (e) {
+      print(e);
+    }
+  }
+
+//  _startAudio() async {
+//    print('audio STARTED');
+//    try {
+//      await _recorder.start();
+//      var recording = await _recorder.current(channel: 0);
+//      setState(() {
+//        _current = recording;
+//      });
+//
+//      const tick = const Duration(milliseconds: 50);
+//      new Timer.periodic(tick, (Timer t) async {
+//        if (_currentStatus == RecordingStatus.Stopped) {
+//          t.cancel();
+//        }
+//
+//        var current = await _recorder.current(channel: 0);
+//        // print(current.status);
+//        setState(() {
+//          _current = current;
+//          _currentStatus = _current.status;
+//        });
+//      });
+//    } catch (e) {
+//      print(e);
+//    }
+//  }
+
+//  _stopAudio() async {
+//    print('AUDIO Stopped');
+//    var result = await _recorder.stop();
+//    print("Stop recording: ${result.path}");
+//    print("Stop recording: ${result.duration}");
+//    print('AUDIO RECORDED PATH${result.path}');
+////    File file = widget.localFileSystem.file(result.path);
+////    print("File length: ${await file.length()}");
+//    setState(() {
+//      _current = result;
+//      _currentStatus = _current.status;
+//    });
+//  }
 
 }
