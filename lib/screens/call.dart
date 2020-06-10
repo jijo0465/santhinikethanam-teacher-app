@@ -7,7 +7,8 @@ import 'package:file/local.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_audio_recorder/flutter_audio_recorder.dart';
-//import 'package:path_provider/path_provider.dart';
+import 'package:flutter_ffmpeg/flutter_ffmpeg.dart';
+import 'package:path_provider/path_provider.dart';
 //import 'dart:async';
 //import 'dart:convert';
 import 'dart:io';
@@ -60,7 +61,7 @@ class _CallPageState extends State<CallPage> with SingleTickerProviderStateMixin
   String sid;
   String videoPath;
   String _platformVersion = 'Unknown';
-
+  final FlutterFFmpeg _flutterFFmpeg = new FlutterFFmpeg();
 //  double appBarHeight = 100;
   double _boxSizeWidth = 520.0;
   double _boxSizeHeight = 104.0;
@@ -75,8 +76,10 @@ class _CallPageState extends State<CallPage> with SingleTickerProviderStateMixin
   Color discussionFieldColor = Colors.grey;
   String date = DateFormat('dd-MM-yyyy').format(DateTime.now());
   FlutterAudioRecorder _recorder;
-  Recording _current;
+//  Recording _current;
   RecordingStatus _currentStatus = RecordingStatus.Unset;
+  LocalFileSystem localFileSystem = LocalFileSystem();
+
 
   @override
   void dispose() {
@@ -103,6 +106,7 @@ class _CallPageState extends State<CallPage> with SingleTickerProviderStateMixin
         end: 0.0).animate(_animationController);
 //    _animationController.forward();
     // initialize agora sdk
+    _initAudio();
     initialize();
     Future.delayed(Duration(seconds: 10)).then((value) {
       setState(() {
@@ -144,7 +148,6 @@ class _CallPageState extends State<CallPage> with SingleTickerProviderStateMixin
     }
     _addAgoraEventHandlers();
     await _initAgoraRtcEngine();
-//    await _initAudio();
   }
 
   /// Create agora sdk instance and initialize
@@ -403,14 +406,14 @@ class _CallPageState extends State<CallPage> with SingleTickerProviderStateMixin
               onPressed: onCheckParticipants ? null : ()
 //              => _onCallEnd(context),
               {
-//                setState(() {
-//                  record = !record;
-//                });
-//                record ? startRecording(broadcasterUid)
-//                    : stopRecording(broadcasterUid);
+                setState(() {
+                  record = !record;
+                });
+                record ? startRecording(broadcasterUid)
+                    : stopRecording(broadcasterUid);
                 
-//                record ? _startVideoRecording()
-//                    : _stopVideoRecording();
+                record ? _startVideoRecording()
+                    : _stopVideoRecording();
               },
               child: Icon(
                 CupertinoIcons.circle_filled,
@@ -1018,97 +1021,137 @@ class _CallPageState extends State<CallPage> with SingleTickerProviderStateMixin
       bool start = await FlutterScreenRecording.startRecordScreen("${DateTime.now().day}_${DateTime.now().month}_${DateTime.now().year}");
 //      _startAudio();
       print('RECORD STATUS : $start');
+    print('audio STARTED');
+    await _recorder.start();
+    var recording = await _recorder.current(channel: 0);
+    print('RECORDING AUDIO STARTED : :: : : ${recording.path}');
   }
 
   _stopVideoRecording() async {
     String path = await FlutterScreenRecording.stopRecordScreen;
 //    _stopAudio();
+    var result = await _recorder.stop();
+    print('AUDIO Stopped');
+    print("Stop recording: ${result.path}");
+    print("Stop recording: ${result.duration}");
+    print('AUDIO RECORDED PATH${result.path}');
     print('Recorded File : $path');
+    _flutterFFmpeg.execute("-i $path -i ${result.path} -c:v copy -c:a copy -codec: copy /storage/emulated/0/DCIM/output.mp4").then((rc) => print("FFmpeg process exited with rc $rc"));
+
   }
 
   _initAudio() async {
+//    if(await FlutterAudioRecorder.hasPermissions){
     print('Audio INITIALIZED');
-    try {
-      if (await FlutterAudioRecorder.hasPermissions) {
-        String audioPath = "${DateTime.now().day}_${DateTime.now().month}_${DateTime.now().year}_audio";
-        Directory appDocDirectory;
-//        appDocDirectory = await getApplicationDocumentsDirectory();
+//    _recorder = FlutterAudioRecorder("${DateTime.now().millisecondsSinceEpoch.toString()}_audio", audioFormat: AudioFormat.AAC); // or AudioFormat.WAV
+//    await _recorder.initialized;
+//    setState(() {
+//    });}
+//    else{
+//      Scaffold.of(context).showSnackBar(
+//          new SnackBar(content: new Text("You must accept permissions")));
+//    }
+
+//    try {
+//      if (await FlutterAudioRecorder.hasPermissions) {
+        String audioPath = "/storage/emulated/0/DCIM/${DateTime.now().millisecondsSinceEpoch.toString()}_audio";
+//        Directory appDocDirectory;
+////        appDocDirectory = await getApplicationDocumentsDirectory();
 //        appDocDirectory = await getExternalStorageDirectory();
-        if (Platform.isIOS) {
+//        if (Platform.isIOS) {
 //          appDocDirectory = await getApplicationDocumentsDirectory();
-        } else {
+//        } else {
 //          appDocDirectory = await getExternalStorageDirectory();
-        }
+//          print('PlatForM DETERMINED!!\n$appDocDirectory');
+//        }
+//    final directory = await getApplicationDocumentsDirectory();
+
 
         // can add extension like ".mp4" ".wav" ".m4a" ".aac"
-//        audioPath = appDocDirectory.path +
-//            audioPath +
+//        audioPath = directory.path +
+//            audioPath;
+        print(audioPath);
+//            +
 //            DateTime.now().millisecondsSinceEpoch.toString();
 
         // .wav <---> AudioFormat.WAV
         // .mp4 .m4a .aac <---> AudioFormat.AAC
         // AudioFormat is optional, if given value, will overwrite path extension when there is conflicts.
         _recorder =
-            FlutterAudioRecorder(audioPath, audioFormat: AudioFormat.WAV);
-
-        await _recorder.initialized;
+            FlutterAudioRecorder(audioPath, audioFormat: AudioFormat.AAC);
+        print(_recorder.recording.status);
+        _recorder.initialized.then((value) => print('intialized!!!!>><><><><>'));
         // after initialization
-        var current = await _recorder.current(channel: 0);
-        print(current);
+//        var current = await _recorder.current(channel: 0);
+//        print(current);
         // should be "Initialized", if all working fine
-        setState(() {
-          _current = current;
-          _currentStatus = current.status;
-          print(_currentStatus);
-        });
-      } else {
-        Scaffold.of(context).showSnackBar(
-            new SnackBar(content: new Text("You must accept permissions")));
-      }
-    } catch (e) {
-      print(e);
-    }
+//        setState(() {
+//          _current = current;
+//          _currentStatus = current.status;
+//          print(_currentStatus);
+//        });
+//      } else {
+//        Scaffold.of(context).showSnackBar(
+//            new SnackBar(content: new Text("You must accept permissions")));
+//      }
+//    } catch (e) {
+//      print('aUDIo ErrOR!! $e');
+//    }
+    setState(() {
+    });
   }
 
 //  _startAudio() async {
 //    print('audio STARTED');
+//    await _recorder.start();
+//    var recording = await _recorder.current(channel: 0);
+//    print('RECORDING AUDIO STARTED : :: : : ${recording.path}');
 //    try {
 //      await _recorder.start();
 //      var recording = await _recorder.current(channel: 0);
-//      setState(() {
-//        _current = recording;
-//      });
+//      print(recording.path);
+////      var recording = await _recorder.current(channel: 0);
+////      setState(() {
+////        _current = recording;
+////      });
 //
-//      const tick = const Duration(milliseconds: 50);
-//      new Timer.periodic(tick, (Timer t) async {
-//        if (_currentStatus == RecordingStatus.Stopped) {
-//          t.cancel();
-//        }
-//
-//        var current = await _recorder.current(channel: 0);
+////      const tick = const Duration(milliseconds: 50);
+////      new Timer.periodic(tick, (Timer t) async {
+////        if (_currentStatus == RecordingStatus.Stopped) {
+////          t.cancel();
+////        }
+////
+////        var current = await _recorder.current(channel: 0);
 //        // print(current.status);
-//        setState(() {
-//          _current = current;
-//          _currentStatus = _current.status;
-//        });
-//      });
+////        setState(() {
+////          _current = current;
+////          _currentStatus = _current.status;
+////        });
+////      });
 //    } catch (e) {
 //      print(e);
 //    }
+//    setState(() {
+//    });
 //  }
 
 //  _stopAudio() async {
-//    print('AUDIO Stopped');
 //    var result = await _recorder.stop();
+////    File file = localFileSystem.file(result.path);
+////    var result = await _recorder.stop();
+////    File file = localFileSystem.file(result.path);
+//    print('AUDIO Stopped');
 //    print("Stop recording: ${result.path}");
 //    print("Stop recording: ${result.duration}");
 //    print('AUDIO RECORDED PATH${result.path}');
+//    setState(() {
+//    });
 ////    File file = widget.localFileSystem.file(result.path);
 ////    print("File length: ${await file.length()}");
-//    setState(() {
-//      _current = result;
-//      _currentStatus = _current.status;
-//    });
+////    setState(() {
+////      _current = result;
+////      _currentStatus = _current.status;
+////    });
 //  }
 
 }
