@@ -187,7 +187,7 @@ class _CallPageState extends State<CallPage> with SingleTickerProviderStateMixin
       firestore.collection('live').document('grade_${grade.id}')
           .setData({'liveBroadcastChannelId': uid},merge: true)
           .then((value) {
-//        startRecording(uid);
+        startRecording(uid);
         broadcasterUid = uid;
         setState(() {
           final info = 'onJoinChannel: $channel, uid: $uid';
@@ -527,7 +527,7 @@ class _CallPageState extends State<CallPage> with SingleTickerProviderStateMixin
   }
 
   void _onCallEnd(BuildContext context) {
-//    stopRecording(broadcasterUid);
+    stopRecording(broadcasterUid);
     if(record)
     _stopVideoRecording();
     firestore.collection('live').document('grade_${grade.id}')
@@ -994,7 +994,7 @@ class _CallPageState extends State<CallPage> with SingleTickerProviderStateMixin
 //
   Future<void> startRecording(int uid) async {
     print("Starting Recording$channelName");
-    String url = 'http://192.168.0.12:8082/start_recording/$uid/$channelName';
+    String url = 'http://api.monkmindsolutions.com/start_recording/$uid/$channelName';
     Map<String, String> headers = {"Content-type": "application/json"};
 //    Map<String, String> params = {"uid": uid.toString()};
 //    String data = jsonEncode(params);
@@ -1008,7 +1008,7 @@ class _CallPageState extends State<CallPage> with SingleTickerProviderStateMixin
 
   Future<void> stopRecording(int uid) async {
     print('Stopping Recording....$channelName');
-    String url = 'http://192.168.0.12:8082/stop_recording/$uid/$channelName';
+    String url = 'http://api.monkmindsolutions.com/stop_recording/$uid/$channelName';
     Map<String, String> headers = {"Content-type": "application/json"};
 //    Map<String, dynamic> params = {"resourceId": "$resourceId", "sid": "$sid"};
 //    String data = jsonEncode(params);
