@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:teacher_app/components/confirm_class.dart';
 import 'package:teacher_app/components/digi_drawer.dart';
 import 'package:teacher_app/components/page_header.dart';
@@ -9,6 +10,7 @@ import 'package:teacher_app/components/digi_period_card.dart';
 import 'package:teacher_app/components/digi_nav_bar.dart';
 import 'package:teacher_app/screens/chat_screen.dart';
 import 'package:teacher_app/screens/knowledge_base_new.dart';
+import 'package:teacher_app/states/teacher_state.dart';
 
 class HomePage extends DrawerContent {
   const HomePage({this.onPressed, this.title, Key key}) : super(key: key);
@@ -25,12 +27,15 @@ class _HomePageState extends State<HomePage> {
   PageController _pageController;
   @override
   void initState() {
-    _pageController = PageController(initialPage: 0, keepPage: true);
+    _pageController = PageController(
+
+        initialPage: 0, keepPage: true);
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
+//    TeacherState teacherState = Provider.of<TeacherState>(context, listen: true);
     return Scaffold(
       body:
           //   Stack(
@@ -63,7 +68,7 @@ class _HomePageState extends State<HomePage> {
                                 child: SingleChildScrollView(
                                   child: Column(
                                     children: <Widget>[
-                                      SizedBox(height: 38),
+                                      SizedBox(height: 42),
                                       Row(
                                         children: [
                                           SizedBox(

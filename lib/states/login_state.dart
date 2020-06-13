@@ -4,6 +4,7 @@ import 'package:flutter/widgets.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:teacher_app/models/teacher.dart';
 import 'package:teacher_app/services/digi_auth.dart';
+import 'package:teacher_app/services/timetableService.dart';
 import 'package:teacher_app/states/teacher_state.dart';
 import 'package:teacher_app/models/timetable.dart';
 enum Status { Uninitialized, Authenticated, Authenticating, Unauthenticated }
@@ -29,9 +30,7 @@ class LoginState with ChangeNotifier {
 //      teacherState.setTimeTable(timeTableList);
       _status = Status.Authenticated;
       _prfs = await SharedPreferences.getInstance();
-      print('GIGUIguUHUHUHu');
-      print(teacher.teacherId);
-      print(json.encode(teacher));
+      await TimetableService().getTeacherTimetable(teacherId);
       await _prfs.setBool('loggedIn',true);
       await _prfs.setString('teacher', json.encode(teacher));
       notifyListeners();

@@ -183,6 +183,7 @@ class _ClassroomScreenState extends State<ClassroomScreen> {
                         child: Row(
                             children: List.generate(timeTable['periods'].length, (index) {
                           isVideoUploaaded = false;
+                          String videoUrl;
                           return StreamBuilder<QuerySnapshot>(
                             stream: firestore.collection('grade_${timeTable['periods'][index]['class']}').snapshots(),
                             builder: (context, snapshot) {
@@ -192,7 +193,6 @@ class _ClassroomScreenState extends State<ClassroomScreen> {
                                     valueColor: AlwaysStoppedAnimation<Color>(
                                         Theme.of(context).primaryColor)));
                               else  {
-
                                 _items = snapshot.data.documents;
                                 if(_items.isNotEmpty)
                                 _items.forEach((element) {
@@ -201,6 +201,7 @@ class _ClassroomScreenState extends State<ClassroomScreen> {
                                     if(element['period_${timeTable['periods'][index]['pdno']}']!=null)
                                       {
                                         print(element['period_${timeTable['periods'][index]['pdno']}']['videoUrl']);
+                                        videoUrl = element['period_${timeTable['periods'][index]['pdno']}']['videoUrl'];
                                         print('KEY --->> TRUE');
                                         isVideoUploaaded = true;
                                       }
@@ -211,8 +212,8 @@ class _ClassroomScreenState extends State<ClassroomScreen> {
                                       GestureDetector(
                                         behavior: HitTestBehavior.translucent,
                                         onTap: (){
-//                                          Navigator.of(context).push(MaterialPageRoute(builder: (context) =>
-//                                              DiscussionsScreen(date: saveFormattedDate, grade: timeTable['periods'][index]['class'], period: timeTable['periods'][index]['pdno'], uploadStatus: isVideoUploaaded)));
+                                          Navigator.of(context).push(MaterialPageRoute(builder: (context) =>
+                                              DiscussionsScreen(date: saveFormattedDate, grade: timeTable['periods'][index]['class'].toString(), period: timeTable['periods'][index]['pdno'], uploadStatus: isVideoUploaaded, url: videoUrl,)));
                                           print(hrs);
 //                                  hrs == (9+index) && i == 0
 //                                  ? Navigator.of(context).pushNamed('/live')

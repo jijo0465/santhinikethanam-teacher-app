@@ -62,8 +62,8 @@ class DigiAppbar extends StatelessWidget {
                             builder: (BuildContext context, TeacherState value,
                                 Widget child) {
                               return Text(
-                                // 'Hi ${value.teacherName} !',
-                                'Hi Teacher!',
+                                 'Hi ${titleCase(value.teacher.name)} !',
+//                                'Hi Teacher!',
                                 style: TextStyle(
                                     fontSize: 20, color: Colors.white),
                               );
@@ -100,6 +100,17 @@ class DigiAppbar extends StatelessWidget {
             // ),
             ));
   }
+  String titleCase(String text) {
+    text = text.toLowerCase();
+    if (text.length <= 1) return text.toUpperCase();
+    var words = text.split(' ');
+    var capitalized = words.map((word) {
+      var first = word.substring(0, 1).toUpperCase();
+      var rest = word.substring(1);
+      return '$first$rest';
+    });
+    return capitalized.join(' ');
+  }
 }
 
 class BackgroundClipper extends CustomClipper<Path> {
@@ -122,4 +133,5 @@ class BackgroundClipper extends CustomClipper<Path> {
   bool shouldReclip(CustomClipper oldClipper) {
     return true;
   }
+
 }

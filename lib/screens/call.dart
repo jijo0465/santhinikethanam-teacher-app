@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 //import 'dart:io' as io;
 
 //import 'package:audioplayers/audioplayers.dart';
@@ -68,12 +69,14 @@ class _CallPageState extends State<CallPage> with SingleTickerProviderStateMixin
 
 //  ValueNotifier<bool> onShowToolbar = ValueNotifier(true);
 //  ValueNotifier<bool> onCheckParticipants = ValueNotifier(false);
+//  ValueNotifier<bool> recording = ValueNotifier(false);
   bool onShowToolbar = true;
 //  bool onShowDiscussions = false;
   bool onCheckParticipants = false;
   bool muted = false;
   bool record = false;
   Color discussionFieldColor = Colors.grey;
+  Color recordButtonColor = Colors.redAccent;
   String date = DateFormat('dd-MM-yyyy').format(DateTime.now());
   FlutterAudioRecorder _recorder;
 //  Recording _current;
@@ -88,6 +91,7 @@ class _CallPageState extends State<CallPage> with SingleTickerProviderStateMixin
     _users.clear();
     discussionListWidget.clear();
     // destroy sdk
+//    _animationController.dispose();
     AgoraRtcEngine.leaveChannel();
     AgoraRtcEngine.destroy();
     super.dispose();
@@ -106,7 +110,7 @@ class _CallPageState extends State<CallPage> with SingleTickerProviderStateMixin
         end: 0.0).animate(_animationController);
 //    _animationController.forward();
     // initialize agora sdk
-    _initAudio();
+//    _initAudio();
     initialize();
     Future.delayed(Duration(seconds: 10)).then((value) {
       setState(() {
@@ -114,27 +118,27 @@ class _CallPageState extends State<CallPage> with SingleTickerProviderStateMixin
       });
       _animationController.forward();
     });
-    initPlatformState();
+//    initPlatformState();
   }
 
-  Future<void> initPlatformState() async {
-    String platformVersion;
-    // Platform messages may fail, so we use a try/catch PlatformException.
-    try {
-      platformVersion = await FlutterScreenRecording.platformVersion;
-    } on PlatformException {
-      platformVersion = 'Failed to get platform version.';
-    }
-
-    // If the widget was removed from the tree while the asynchronous platform
-    // message was in flight, we want to discard the reply rather than calling
-    // setState to update our non-existent appearance.
-    if (!mounted) return;
-
-    setState(() {
-      _platformVersion = platformVersion;
-    });
-  }
+//  Future<void> initPlatformState() async {
+//    String platformVersion;
+//    // Platform messages may fail, so we use a try/catch PlatformException.
+//    try {
+//      platformVersion = await FlutterScreenRecording.platformVersion;
+//    } on PlatformException {
+//      platformVersion = 'Failed to get platform version.';
+//    }
+//
+//    // If the widget was removed from the tree while the asynchronous platform
+//    // message was in flight, we want to discard the reply rather than calling
+//    // setState to update our non-existent appearance.
+//    if (!mounted) return;
+//
+//    setState(() {
+//      _platformVersion = platformVersion;
+//    });
+//  }
 
   Future<void> initialize() async {
     if (APP_ID.isEmpty) {
@@ -399,32 +403,54 @@ class _CallPageState extends State<CallPage> with SingleTickerProviderStateMixin
           ),
           Flexible(
             flex: 3,
-            child: FloatingActionButton(
-
-//              shape: CircleBorder(side: BorderSide(color: Colors.white30)),
-              backgroundColor: Colors.transparent,
-              onPressed: onCheckParticipants ? null : ()
-//              => _onCallEnd(context),
-              {
+            child:TweenAnimationBuilder(
+              tween: ColorTween(begin: Theme.of(context)
+                        .primaryColor
+                        .withOpacity(0.6),end: recordButtonColor),
+              duration: Duration(seconds: 2),
+              onEnd: (){
+                if(record)
                 setState(() {
-                  record = !record;
+                  recordButtonColor = recordButtonColor == Colors.redAccent
+                      ?Theme
+                        .of(context)
+                        .primaryColor
+                        .withOpacity(0.6)
+                      :Colors.redAccent;
                 });
-                record ? startRecording(broadcasterUid)
-                    : stopRecording(broadcasterUid);
-                
-                record ? _startVideoRecording()
-                    : _stopVideoRecording();
+                else {
+                  recordButtonColor = Colors.redAccent;
+                }
               },
-              child: Icon(
-                CupertinoIcons.circle_filled,
-                size: 60,
-                color: record ? Colors.redAccent : Theme
-                    .of(context)
-                    .primaryColor
-                    .withOpacity(0.6),
+              builder: (_, Color color, __){
+                return FloatingActionButton(
+//              shape: CircleBorder(side: BorderSide(color: Colors.white30)),
+                  backgroundColor: Colors.transparent,
+                  onPressed: onCheckParticipants ? null : ()
+//              => _onCallEnd(context),
+                  {
+//                setState(() {
+//                  record = !record;
+//                });
+//                record ? startRecording(broadcasterUid)
+//                    : stopRecording(broadcasterUid);
+
+//                record ? _startVideoRecording()
+//                    : _stopVideoRecording();
+                  },
+                  child: Icon(
+                    CupertinoIcons.circle_filled,
+                    size: 60,
+                    color: color
+//                    recording.value ? Colors.redAccent : Theme
+//                        .of(context)
+//                        .primaryColor
+//                        .withOpacity(0.6),
 //                size: 60.0,
-              ),
-            ),
+                  ),
+                );
+              },
+            )
           ),
           Flexible(
             flex: 2,
@@ -527,12 +553,30 @@ class _CallPageState extends State<CallPage> with SingleTickerProviderStateMixin
   }
 
   void _onCallEnd(BuildContext context) {
-    stopRecording(broadcasterUid);
-    if(record)
-    _stopVideoRecording();
-    firestore.collection('live').document('grade_${grade.id}')
-        .setData({'liveBroadcastChannelId': null},merge: true);
-    Navigator.pop(context);
+    showDialog(
+        context: context,
+        builder: (BuildContext context) => CupertinoAlertDialog(
+          title: Text('Alert'),
+          content: Text('End Class?'),
+          actions: <Widget>[
+            CupertinoDialogAction(
+                child: Text('Confirm'),
+                onPressed: () {
+                  stopRecording(broadcasterUid);
+//                  if(record)
+//                    _stopVideoRecording();
+                  firestore.collection('live').document('grade_${grade.id}')
+                      .setData({'liveBroadcastChannelId': null},merge: true);
+                  Navigator.pop(context);
+                  Navigator.pop(context);
+                }),
+            CupertinoDialogAction(
+              child: Text('Cancel'),
+              onPressed: (){
+                Navigator.of(context).pop();
+              },),
+          ],
+        ));
   }
 
   void _onToggleMute() {
@@ -683,7 +727,7 @@ class _CallPageState extends State<CallPage> with SingleTickerProviderStateMixin
     return Scaffold(
       backgroundColor: Colors.black,
       body: WillPopScope(
-        onWillPop: (){
+        onWillPop: () {
           _onCallEnd(context);
           return Future.value(true);
         },
@@ -991,6 +1035,17 @@ class _CallPageState extends State<CallPage> with SingleTickerProviderStateMixin
       ),
     );
   }
+
+  updateDatabaseVideo(String url) {
+    int periodNo;
+    String saveFormattedDate = DateFormat('dd-MM-yyyy').format(DateTime.now());
+    firestore.collection('grade_${grade.id}').document('$saveFormattedDate').get().then((value) {
+      periodNo = value.data == null  ?1 :value.data.length+1;
+      firestore.collection('grade_${grade.id}').document('$saveFormattedDate').setData(
+          {'period_$periodNo': {'pdno': '$periodNo', 'videoUrl': url}},merge: true
+      );
+    });
+    }
 //
   Future<void> startRecording(int uid) async {
     print("Starting Recording$channelName");
@@ -999,107 +1054,159 @@ class _CallPageState extends State<CallPage> with SingleTickerProviderStateMixin
 //    Map<String, String> params = {"uid": uid.toString()};
 //    String data = jsonEncode(params);
 
-    http.get(url, headers: headers).then((response) {
+    http.get(url, headers: headers).then((response) async {
+      await Future.delayed(Duration(seconds: 5));
+      getRecordingStatus(uid);
       // print(response.body);
       // resourceId = json.decode(response.body)['resourceId'];
       // sid = json.decode(response.body)['resourceId'];
     }).catchError((error) => print(error));
+
+  }
+
+  Future<dynamic> getRecordingStatus(int uid){
+    print("Getting Status");
+    String url = 'http://api.monkmindsolutions.com/get_status/$uid/$channelName';
+    Map<String, String> headers = {"Content-type": "application/json"};
+//    Map<String, String> params = {"uid": uid.toString()};
+//    String data = jsonEncode(params);
+
+    http.get(url, headers: headers).then((response) {
+//      getRecordingStatus();
+       print(response.body);
+       var status = jsonDecode(response.body);
+       print('STATUS \n$status');
+       print('STATUS CODE : ${status['serverResponse']['status']}');
+       if(status['serverResponse']['status'] == 5){
+         print('STATUS CODE : ${status['serverResponse']['status']}');
+         setState(() {
+           record = true;
+         });
+       }else{
+         throw Exception('Recording Not started');
+       }
+      // sid = json.decode(response.body)['resourceId'];
+    }).catchError((error) => showCupertinoDialog(context: context, builder:(context) {
+      return CupertinoAlertDialog(
+        title: Text('Recording Not Started'),
+        actions: [
+          FlatButton(child: Text('Exit'),onPressed: (){
+            Navigator.of(context).pop();
+            _onCallEnd(context);
+          },),
+          FlatButton(child: Text('Try Again'),onPressed: () async {
+            Navigator.of(context).pop();
+            AgoraRtcEngine.leaveChannel();
+            await AgoraRtcEngine.joinChannel(
+                null,
+                'class_${grade.id}',
+                null,
+                0);
+          },)
+        ],
+      );
+    }, ));
   }
 
   Future<void> stopRecording(int uid) async {
     print('Stopping Recording....$channelName');
+    await Future.delayed(Duration(seconds: 5));
     String url = 'http://api.monkmindsolutions.com/stop_recording/$uid/$channelName';
     Map<String, String> headers = {"Content-type": "application/json"};
 //    Map<String, dynamic> params = {"resourceId": "$resourceId", "sid": "$sid"};
 //    String data = jsonEncode(params);
     await http.get(url, headers: headers).then((response) {
       print(response.body);
+      var res = json.decode(response.body);
+      String url = "https://digicampus.s3.us-east-2.amazonaws.com/" +
+          res['serverResponse']['fileList'];
+      updateDatabaseVideo(url);
     }).catchError((error) => print(error));
   }
 
-  _startVideoRecording() async {
-      bool start = await FlutterScreenRecording.startRecordScreen("${DateTime.now().day}_${DateTime.now().month}_${DateTime.now().year}");
-//      _startAudio();
-      print('RECORD STATUS : $start');
-    print('audio STARTED');
-    await _recorder.start();
-    var recording = await _recorder.current(channel: 0);
-    print('RECORDING AUDIO STARTED : :: : : ${recording.path}');
-  }
+//  _startVideoRecording() async {
+//      bool start = await FlutterScreenRecording.startRecordScreen("${DateTime.now().day}_${DateTime.now().month}_${DateTime.now().year}");
+////      _startAudio();
+//      print('RECORD STATUS : $start');
+//    print('audio STARTED');
+//    await _recorder.start();
+//    var recording = await _recorder.current(channel: 0);
+//    print('RECORDING AUDIO STARTED : :: : : ${recording.path}');
+//  }
 
-  _stopVideoRecording() async {
-    String path = await FlutterScreenRecording.stopRecordScreen;
-//    _stopAudio();
-    var result = await _recorder.stop();
-    print('AUDIO Stopped');
-    print("Stop recording: ${result.path}");
-    print("Stop recording: ${result.duration}");
-    print('AUDIO RECORDED PATH${result.path}');
-    print('Recorded File : $path');
-    _flutterFFmpeg.execute("-i $path -i ${result.path} -c:v copy -c:a copy -codec: copy /storage/emulated/0/DCIM/output.mp4").then((rc) => print("FFmpeg process exited with rc $rc"));
+//  _stopVideoRecording() async {
+//    String path = await FlutterScreenRecording.stopRecordScreen;
+////    _stopAudio();
+//    var result = await _recorder.stop();
+//    print('AUDIO Stopped');
+//    print("Stop recording: ${result.path}");
+//    print("Stop recording: ${result.duration}");
+//    print('AUDIO RECORDED PATH${result.path}');
+//    print('Recorded File : $path');
+//    _flutterFFmpeg.execute("-i $path -i ${result.path} -c:v copy -c:a copy -codec: copy /storage/emulated/0/DCIM/output.mp4").then((rc) => print("FFmpeg process exited with rc $rc"));
+//
+//  }
 
-  }
-
-  _initAudio() async {
-//    if(await FlutterAudioRecorder.hasPermissions){
-    print('Audio INITIALIZED');
-//    _recorder = FlutterAudioRecorder("${DateTime.now().millisecondsSinceEpoch.toString()}_audio", audioFormat: AudioFormat.AAC); // or AudioFormat.WAV
-//    await _recorder.initialized;
+//  _initAudio() async {
+////    if(await FlutterAudioRecorder.hasPermissions){
+//    print('Audio INITIALIZED');
+////    _recorder = FlutterAudioRecorder("${DateTime.now().millisecondsSinceEpoch.toString()}_audio", audioFormat: AudioFormat.AAC); // or AudioFormat.WAV
+////    await _recorder.initialized;
+////    setState(() {
+////    });}
+////    else{
+////      Scaffold.of(context).showSnackBar(
+////          new SnackBar(content: new Text("You must accept permissions")));
+////    }
+//
+////    try {
+////      if (await FlutterAudioRecorder.hasPermissions) {
+//        String audioPath = "/storage/emulated/0/DCIM/${DateTime.now().millisecondsSinceEpoch.toString()}_audio";
+////        Directory appDocDirectory;
+//////        appDocDirectory = await getApplicationDocumentsDirectory();
+////        appDocDirectory = await getExternalStorageDirectory();
+////        if (Platform.isIOS) {
+////          appDocDirectory = await getApplicationDocumentsDirectory();
+////        } else {
+////          appDocDirectory = await getExternalStorageDirectory();
+////          print('PlatForM DETERMINED!!\n$appDocDirectory');
+////        }
+////    final directory = await getApplicationDocumentsDirectory();
+//
+//
+//        // can add extension like ".mp4" ".wav" ".m4a" ".aac"
+////        audioPath = directory.path +
+////            audioPath;
+//        print(audioPath);
+////            +
+////            DateTime.now().millisecondsSinceEpoch.toString();
+//
+//        // .wav <---> AudioFormat.WAV
+//        // .mp4 .m4a .aac <---> AudioFormat.AAC
+//        // AudioFormat is optional, if given value, will overwrite path extension when there is conflicts.
+//        _recorder =
+//            FlutterAudioRecorder(audioPath, audioFormat: AudioFormat.AAC);
+////        print(_recorder.recording.status);
+//        _recorder.initialized.then((value) => print('intialized!!!!>><><><><>'));
+//        // after initialization
+////        var current = await _recorder.current(channel: 0);
+////        print(current);
+//        // should be "Initialized", if all working fine
+////        setState(() {
+////          _current = current;
+////          _currentStatus = current.status;
+////          print(_currentStatus);
+////        });
+////      } else {
+////        Scaffold.of(context).showSnackBar(
+////            new SnackBar(content: new Text("You must accept permissions")));
+////      }
+////    } catch (e) {
+////      print('aUDIo ErrOR!! $e');
+////    }
 //    setState(() {
-//    });}
-//    else{
-//      Scaffold.of(context).showSnackBar(
-//          new SnackBar(content: new Text("You must accept permissions")));
-//    }
-
-//    try {
-//      if (await FlutterAudioRecorder.hasPermissions) {
-        String audioPath = "/storage/emulated/0/DCIM/${DateTime.now().millisecondsSinceEpoch.toString()}_audio";
-//        Directory appDocDirectory;
-////        appDocDirectory = await getApplicationDocumentsDirectory();
-//        appDocDirectory = await getExternalStorageDirectory();
-//        if (Platform.isIOS) {
-//          appDocDirectory = await getApplicationDocumentsDirectory();
-//        } else {
-//          appDocDirectory = await getExternalStorageDirectory();
-//          print('PlatForM DETERMINED!!\n$appDocDirectory');
-//        }
-//    final directory = await getApplicationDocumentsDirectory();
-
-
-        // can add extension like ".mp4" ".wav" ".m4a" ".aac"
-//        audioPath = directory.path +
-//            audioPath;
-        print(audioPath);
-//            +
-//            DateTime.now().millisecondsSinceEpoch.toString();
-
-        // .wav <---> AudioFormat.WAV
-        // .mp4 .m4a .aac <---> AudioFormat.AAC
-        // AudioFormat is optional, if given value, will overwrite path extension when there is conflicts.
-        _recorder =
-            FlutterAudioRecorder(audioPath, audioFormat: AudioFormat.AAC);
-        print(_recorder.recording.status);
-        _recorder.initialized.then((value) => print('intialized!!!!>><><><><>'));
-        // after initialization
-//        var current = await _recorder.current(channel: 0);
-//        print(current);
-        // should be "Initialized", if all working fine
-//        setState(() {
-//          _current = current;
-//          _currentStatus = current.status;
-//          print(_currentStatus);
-//        });
-//      } else {
-//        Scaffold.of(context).showSnackBar(
-//            new SnackBar(content: new Text("You must accept permissions")));
-//      }
-//    } catch (e) {
-//      print('aUDIo ErrOR!! $e');
-//    }
-    setState(() {
-    });
-  }
+//    });
+//  }
 
 //  _startAudio() async {
 //    print('audio STARTED');

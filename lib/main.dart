@@ -75,7 +75,7 @@ class TeacherApp extends StatelessWidget {
 //            '/approve_leave_request': (context) => ApproveLeaveRequest(),
 //            '/attendance_history':(context) => AttendanceHistory(),
             '/classroom_screen': (context) => ClassroomScreen(),
-//            '/discussions': (context) => DiscussionsScreen(),
+            '/discussions': (context) => DiscussionsScreen(),
             '/live': (context) => LiveScreen(),
 //            '/chat': (context) => ChatScreen(),
 //            '/student_360': (context) => Student360Screen(),

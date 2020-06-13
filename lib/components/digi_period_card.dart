@@ -49,7 +49,7 @@ class _DigiPeriodCardState extends State<DigiPeriodCard> {
         timeTable = null;
     }
     print(timeTable);
-    return timeTable['periods'][index]['class'];
+    return timeTable==null ?null :timeTable['periods'][index]['class'];
   }
 
   @override
@@ -61,17 +61,20 @@ class _DigiPeriodCardState extends State<DigiPeriodCard> {
         children: <Widget>[
           PageView.builder(
             controller: _pageController,
-            itemCount: 3,
+            itemCount: timeTable==null ?1 :timeTable['periods'].length,
             itemBuilder: (BuildContext context, int index) {
               int grade = getGrade(index);
               return Container(
                 margin: EdgeInsets.only(left: 2, right: 2),
                 child: Card(
-                  elevation: 8,
-                  color: Colors.blue[100].withOpacity(0.6),
+                  elevation: 6,
+                  color: Colors.white.withOpacity(0.95),
                   shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(100)),
-                  child: Column(
+                      borderRadius: BorderRadius.circular(40)
+                  ),
+                  child: timeTable==null
+                      ?Center(child: Container(child: Text('Day Off')))
+                      :Column(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: <Widget>[
@@ -105,8 +108,8 @@ class _DigiPeriodCardState extends State<DigiPeriodCard> {
                   height: 60,
                   child: Icon(
                     CupertinoIcons.left_chevron,
-                    size: 30,
-                    color: Colors.white,
+                    size: 26,
+                    color: Colors.black,
                   ),
                 ),
               )),
@@ -122,8 +125,8 @@ class _DigiPeriodCardState extends State<DigiPeriodCard> {
                   height: 60,
                   child: Icon(
                     CupertinoIcons.right_chevron,
-                    size: 30,
-                    color: Colors.white,
+                    size: 26,
+                    color: Colors.black,
                   ),
                 ),
               )),
