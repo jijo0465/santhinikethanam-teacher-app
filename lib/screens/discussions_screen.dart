@@ -193,8 +193,9 @@ class _DiscussionsScreenState extends State<DiscussionsScreen> {
 //                 _playerController.dispose();
                  return Future.value(true);
                },
-               child: Container(
-                child: Column(children: <Widget>[
+               child: Stack(
+                children: [
+                  Column(children: <Widget>[
 //                  Container(
 //                    color: Theme.of(context).primaryColor,
 //                    height: MediaQuery.of(context).padding.top,
@@ -501,6 +502,20 @@ class _DiscussionsScreenState extends State<DiscussionsScreen> {
                   //       }
                   //     }),
                 ]),
+                  Positioned(
+                    top: MediaQuery.of(context).padding.top,
+                    left: 10,
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.translucent,
+                      child: Icon(Icons.chevron_left,
+                        color: Colors.redAccent,
+                        size: 30,),
+                      onTap: (){
+                        Navigator.pop(context);
+                        },
+                    ),
+                  ),
+                ]
         ),
              ));
   }

@@ -554,15 +554,16 @@ class _CallPageState extends State<CallPage> with SingleTickerProviderStateMixin
 
   void _onCallEnd(BuildContext context) {
     showDialog(
+//      barrierDismissible: true ,
         context: context,
         builder: (BuildContext context) => CupertinoAlertDialog(
           title: Text('Alert'),
           content: Text('End Class?'),
           actions: <Widget>[
             CupertinoDialogAction(
-                child: Text('Confirm'),
+                child: Text('Upload Class'),
                 onPressed: () {
-                  stopRecording(broadcasterUid);
+                  stopRecording(broadcasterUid,true);
 //                  if(record)
 //                    _stopVideoRecording();
                   firestore.collection('live').document('grade_${grade.id}')
@@ -571,9 +572,13 @@ class _CallPageState extends State<CallPage> with SingleTickerProviderStateMixin
                   Navigator.pop(context);
                 }),
             CupertinoDialogAction(
-              child: Text('Cancel'),
+              child: Text('Exit'),
               onPressed: (){
-                Navigator.of(context).pop();
+                stopRecording(broadcasterUid,false);
+                firestore.collection('live').document('grade_${grade.id}')
+                    .setData({'liveBroadcastChannelId': null},merge: true);
+                Navigator.pop(context);
+                Navigator.pop(context);
               },),
           ],
         ));
@@ -1108,7 +1113,7 @@ class _CallPageState extends State<CallPage> with SingleTickerProviderStateMixin
     }, ));
   }
 
-  Future<void> stopRecording(int uid) async {
+  Future<void> stopRecording(int uid, bool rec) async {
     print('Stopping Recording....$channelName');
     await Future.delayed(Duration(seconds: 5));
     String url = 'http://api.monkmindsolutions.com/stop_recording/$uid/$channelName';
@@ -1120,6 +1125,7 @@ class _CallPageState extends State<CallPage> with SingleTickerProviderStateMixin
       var res = json.decode(response.body);
       String url = "https://digicampus.s3.us-east-2.amazonaws.com/" +
           res['serverResponse']['fileList'];
+      if (rec)
       updateDatabaseVideo(url);
     }).catchError((error) => print(error));
   }
