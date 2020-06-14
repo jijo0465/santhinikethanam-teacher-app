@@ -557,8 +557,8 @@ class _CallPageState extends State<CallPage> with SingleTickerProviderStateMixin
 //      barrierDismissible: true ,
         context: context,
         builder: (BuildContext context) => CupertinoAlertDialog(
-          title: Text('Alert'),
-          content: Text('End Class?'),
+          title: Text('End Class?'),
+          content: Text('press exit to discard'),
           actions: <Widget>[
             CupertinoDialogAction(
                 child: Text('Upload Class'),
