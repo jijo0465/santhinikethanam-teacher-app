@@ -407,9 +407,9 @@ class _CallPageState extends State<CallPage> with SingleTickerProviderStateMixin
               tween: ColorTween(begin: Theme.of(context)
                         .primaryColor
                         .withOpacity(0.6),end: recordButtonColor),
-              duration: Duration(seconds: 2),
+              duration: Duration(seconds: 1),
               onEnd: (){
-                if(record)
+                if(!record)
                 setState(() {
                   recordButtonColor = recordButtonColor == Colors.redAccent
                       ?Theme
