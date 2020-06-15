@@ -72,7 +72,7 @@ class _ClassroomScreenState extends State<ClassroomScreen> {
     String formattedDay = _dateFormatDay.format(date);
     String formattedDate = _dateFormat.format(date);
     String saveFormattedDate = DateFormat('dd-MM-yyyy').format(date);
-    bool isVideoUploaaded= false;
+//    bool isVideoUploaaded= false;
     var startTime = ['10:00','10:45','11:30'];
     var endTime = ['10:30','11:15','12:00'];
 //    print('TIMETABLE : : : : ${TimeTable().getTeacherTimeTable(teacherState.teacher.teacherId)[0]['periods'][2]['class']}');
@@ -177,13 +177,13 @@ class _ClassroomScreenState extends State<ClassroomScreen> {
                       child: Container(
                         decoration: BoxDecoration(
                             gradient: LinearGradient(colors: [
-                          Colors.blue[100].withOpacity(0.3),
-                          Colors.blue[400].withOpacity(0.3)
+                          Colors.grey[100].withOpacity(0.3),
+                          Colors.grey[400].withOpacity(0.3)
                         ])),
                         child: Row(
                             children: List.generate(timeTable['periods'].length, (index) {
-                          isVideoUploaaded = false;
-                          String videoUrl;
+                          var isVideoUploaded = false;
+                          var videoUrl = '';
                           return StreamBuilder<QuerySnapshot>(
                             stream: firestore.collection('grade_${timeTable['periods'][index]['class']}').snapshots(),
                             builder: (context, snapshot) {
@@ -196,16 +196,19 @@ class _ClassroomScreenState extends State<ClassroomScreen> {
                                 _items = snapshot.data.documents;
                                 if(_items.isNotEmpty)
                                 _items.forEach((element) {
-                                  if(element.documentID == saveFormattedDate)
-
+                                  if(timeTable['periods'][index]['class']==0)
+                                    isVideoUploaded = false;
+                                  else if(element.documentID == saveFormattedDate)
                                     if(element['period_${timeTable['periods'][index]['pdno']}']!=null)
                                       {
                                         print(element['period_${timeTable['periods'][index]['pdno']}']['videoUrl']);
                                         videoUrl = element['period_${timeTable['periods'][index]['pdno']}']['videoUrl'];
                                         print('KEY --->> TRUE');
-                                        isVideoUploaaded = true;
+                                        videoUrl != null
+                                            ?isVideoUploaded = true
+                                            :isVideoUploaded = false;
                                       }
-                                    else  isVideoUploaaded = false;
+                                    else  isVideoUploaded = false;
                                 });
                               return Row(
                                     children: <Widget>[
@@ -213,7 +216,7 @@ class _ClassroomScreenState extends State<ClassroomScreen> {
                                         behavior: HitTestBehavior.translucent,
                                         onTap: (){
                                           Navigator.of(context).push(MaterialPageRoute(builder: (context) =>
-                                              DiscussionsScreen(date: saveFormattedDate, grade: timeTable['periods'][index]['class'].toString(), period: timeTable['periods'][index]['pdno'], uploadStatus: isVideoUploaaded, url: videoUrl,)));
+                                              DiscussionsScreen(date: saveFormattedDate, grade: timeTable['periods'][index]['class'].toString(), period: timeTable['periods'][index]['pdno'], uploadStatus: isVideoUploaded, url: videoUrl,)));
                                           print(hrs);
 //                                  hrs == (9+index) && i == 0
 //                                  ? Navigator.of(context).pushNamed('/live')
@@ -223,11 +226,11 @@ class _ClassroomScreenState extends State<ClassroomScreen> {
                                             height: 80,
                                             width: 100,
                                             decoration: BoxDecoration(
-                                                gradient: !isVideoUploaaded
+                                                gradient: isVideoUploaded
                                                     ? LinearGradient(colors: [
-                                                        Colors.grey[
+                                                        Colors.blue[
                                                             (index + 1) * 100],
-                                                        Colors.grey[
+                                                        Colors.blue[
                                                             100 + ((index + 1) * 100)]
                                                       ])
                                                     : null),

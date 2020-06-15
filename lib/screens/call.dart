@@ -1,17 +1,8 @@
 import 'dart:async';
 import 'dart:convert';
-//import 'dart:io' as io;
-
-//import 'package:audioplayers/audioplayers.dart';
 import 'package:file/file.dart';
 import 'package:file/local.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter_audio_recorder/flutter_audio_recorder.dart';
-import 'package:flutter_ffmpeg/flutter_ffmpeg.dart';
-import 'package:path_provider/path_provider.dart';
-//import 'dart:async';
-//import 'dart:convert';
 import 'dart:io';
 import 'dart:ui';
 
@@ -19,10 +10,6 @@ import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:diagonal_scrollview/diagonal_scrollview.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter_screen_recording/flutter_screen_recording.dart';
-import 'package:flutter_audio_recorder/flutter_audio_recorder.dart';
-import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:teacher_app/components/digicampus_appbar.dart';
 import 'package:teacher_app/components/live_stream_settings.dart';
@@ -62,7 +49,6 @@ class _CallPageState extends State<CallPage> with SingleTickerProviderStateMixin
   String sid;
   String videoPath;
   String _platformVersion = 'Unknown';
-  final FlutterFFmpeg _flutterFFmpeg = new FlutterFFmpeg();
 //  double appBarHeight = 100;
   double _boxSizeWidth = 520.0;
   double _boxSizeHeight = 104.0;
@@ -78,9 +64,7 @@ class _CallPageState extends State<CallPage> with SingleTickerProviderStateMixin
   Color discussionFieldColor = Colors.grey;
   Color recordButtonColor = Colors.redAccent;
   String date = DateFormat('dd-MM-yyyy').format(DateTime.now());
-  FlutterAudioRecorder _recorder;
-//  Recording _current;
-  RecordingStatus _currentStatus = RecordingStatus.Unset;
+
   LocalFileSystem localFileSystem = LocalFileSystem();
 
 
