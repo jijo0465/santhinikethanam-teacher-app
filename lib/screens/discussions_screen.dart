@@ -285,7 +285,7 @@ class _DiscussionsScreenState extends State<DiscussionsScreen> {
                                           // return object of type Dialog
                                           return AlertDialog(
                                             title: new Text("Share video to Classroom?"),
-                                            content: new Text("Class : 10 \nDate : ${widget.date}"),
+                                            content: new Text("Class : ${widget.grade} \nDate : ${widget.date}"),
                                             actions: <Widget>[
                                               // usually buttons at the bottom of the dialog
                                               new FlatButton(
