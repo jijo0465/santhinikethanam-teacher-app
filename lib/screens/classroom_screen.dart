@@ -10,7 +10,6 @@ import 'package:teacher_app/states/teacher_state.dart';
 class ClassroomScreen extends StatefulWidget {
   const ClassroomScreen({Key key}) : super(key: key);
 
-
   @override
   _ClassroomScreenState createState() => _ClassroomScreenState();
 }
@@ -48,7 +47,6 @@ class _ClassroomScreenState extends State<ClassroomScreen> {
    void initState() {
      // iconOffset = 50.0;
      // watchLive = false;
-
      lastDate =  DateTime.now().add(Duration(days: 1));
      super.initState();
    }
@@ -216,7 +214,7 @@ class _ClassroomScreenState extends State<ClassroomScreen> {
                                         behavior: HitTestBehavior.translucent,
                                         onTap: (){
                                           Navigator.of(context).push(MaterialPageRoute(builder: (context) =>
-                                              DiscussionsScreen(date: saveFormattedDate, grade: timeTable['periods'][index]['class'].toString(), period: timeTable['periods'][index]['pdno'], uploadStatus: isVideoUploaded, url: videoUrl,)));
+                                              DiscussionsScreen(date: saveFormattedDate, grade: timeTable['periods'][index]['class'].toString(), subject: timeTable['subject'], period: timeTable['periods'][index]['pdno'], uploadStatus: isVideoUploaded, url: videoUrl,)));
                                           print(hrs);
 //                                  hrs == (9+index) && i == 0
 //                                  ? Navigator.of(context).pushNamed('/live')

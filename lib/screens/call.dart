@@ -6,6 +6,9 @@ import 'package:flutter/material.dart';
 import 'dart:io';
 import 'dart:ui';
 
+import 'package:provider/provider.dart';
+import 'package:teacher_app/models/timetable.dart';
+import 'package:teacher_app/states/teacher_state.dart';
 import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:diagonal_scrollview/diagonal_scrollview.dart';
@@ -1025,13 +1028,13 @@ class _CallPageState extends State<CallPage> with SingleTickerProviderStateMixin
     );
   }
 
-  updateDatabaseVideo(String url) {
+  Future<void> updateDatabaseVideo(String url, String subject) async {
     int periodNo;
     String saveFormattedDate = DateFormat('dd-MM-yyyy').format(DateTime.now());
-    firestore.collection('grade_${grade.id}').document('$saveFormattedDate').get().then((value) {
+    await firestore.collection('grade_${grade.id}').document('$saveFormattedDate').get().then((value) {
       periodNo = value.data == null  ?1 :value.data.length+1;
       firestore.collection('grade_${grade.id}').document('$saveFormattedDate').setData(
-          {'period_$periodNo': {'pdno': '$periodNo', 'videoUrl': url}},merge: true
+          {'period_$periodNo': {'pdno': '$periodNo','subject': subject,'videoUrl': url}},merge: true
       );
     });
     }
@@ -1098,19 +1101,46 @@ class _CallPageState extends State<CallPage> with SingleTickerProviderStateMixin
   }
 
   Future<void> stopRecording(int uid, bool rec) async {
+    TeacherState teacherState =  Provider.of<TeacherState>(context, listen: false);
+    DateFormat _dateFormat = DateFormat.E();
+    String formattedDay = _dateFormat.format(DateTime.now());
+    List<Map<String, dynamic>> timeTableList = TimeTable().getTeacherTimeTable(teacherState.teacher.teacherId);
+    print(timeTableList);
+    Map<String, dynamic> timeTable;
+    print(formattedDay);
+    switch (formattedDay) {
+      case 'Mon':
+        timeTable = timeTableList[0];
+        break;
+      case 'Tue':
+        timeTable = timeTableList[1];
+        break;
+      case 'Wed':
+        timeTable = timeTableList[2];
+        break;
+      case 'Thu':
+        timeTable = timeTableList[3];
+        break;
+      case 'Fri':
+        timeTable = timeTableList[4];
+        break;
+      default:
+        return ;
+    }
+    String subject = timeTable['subject'];
     print('Stopping Recording....$channelName');
     await Future.delayed(Duration(seconds: 5));
     String url = 'http://api.monkmindsolutions.com/stop_recording/$uid/$channelName';
     Map<String, String> headers = {"Content-type": "application/json"};
 //    Map<String, dynamic> params = {"resourceId": "$resourceId", "sid": "$sid"};
 //    String data = jsonEncode(params);
-    await http.get(url, headers: headers).then((response) {
+    await http.get(url, headers: headers).then((response) async {
       print(response.body);
       var res = json.decode(response.body);
       String url = "https://digicampus.s3.us-east-2.amazonaws.com/" +
           res['serverResponse']['fileList'];
       if (rec)
-      updateDatabaseVideo(url);
+      await updateDatabaseVideo(url,subject);
     }).catchError((error) => print(error));
   }
 

@@ -22,8 +22,9 @@ class DiscussionsScreen extends StatefulWidget {
   final int period;
   final bool uploadStatus;
   final String url;
+  final String subject;
 
-  const DiscussionsScreen({Key key, this.date, this.grade, this.period, this.uploadStatus, this.url}) : super(key: key);
+  const DiscussionsScreen({Key key, this.date, this.grade, this.period, this.uploadStatus, this.url, this.subject}) : super(key: key);
 
   @override
   _DiscussionsScreenState createState() => _DiscussionsScreenState();
@@ -598,7 +599,7 @@ class _DiscussionsScreenState extends State<DiscussionsScreen> {
 //      'videoUrl': url,
 //    }];
       firestore.collection('grade_${widget.grade}').document('${widget.date}').setData(
-          {'period_${widget.period}': {'pdno': '${widget.period}', 'videoUrl': url}},merge: true
+          {'period_${widget.period}': {'pdno': '${widget.period}','subject': widget.subject, 'videoUrl': url}},merge: true
       );
 //    var updateUrl ;
 //    print('UODATE DATABASE');

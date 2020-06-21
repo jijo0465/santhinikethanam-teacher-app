@@ -5,6 +5,7 @@ class TimeTable{
     List<Map<String, dynamic>> teacherTimeTableList = new List<Map<String, dynamic>>();
 //    teacherCode = 'AS';
     timeTableList.forEach((t) {
+
 //      print(t['teacherCode']);
       if(t['teacherCode'].toString().compareTo(teacherCode)==0){
         print(teacherCode);
